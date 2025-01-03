@@ -1,0 +1,1320 @@
+= RHEL AI and InstructLab: Get a taste in training your own model
+
+:experimental: true
+:imagesdir: ../assets/images
+:toc: false
+:numbered: true
+
+[#intro]
+== Introduction to the Lab
+
+Thanks for taking the time to learn about and use RHEL AI at Red Hat Emerging Tech Exchange (ETX). 
+
+During this lab experience, you will learn how to create a fine-tuned version of an IBM Granite model for a fictional insurance company, **Parasol**. You will then deploy this newly enhanced model in RHEL AI. In another lab environment, you will then migrate this model to Red Hat OpenShift AI to complete the RHOAI portion of the lab training. 
+
+By the end of this RHEL AI portion of the hands-on workshop, you will know what https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux/ai[RHEL AI] is and how you can use it to provide value to our customers. You will also understand to leverage RHEL AI to improve a Large Language Model (LLM), and fine-tune it using synthetic data generation. 
+
+=== Setting Up Your Terminals
+
+To complete the lab you need two terminal windows.
+
+Open two individual terminal tabs or windows and SSH into the demo environments:
+
+From each terminal, enter: **{ssh_command}**, and use **{ssh_password}** for the password to login.
+
+[#rhelai]
+== What is RHEL AI?
+
+RHEL AI consists of several core components:
+
+. https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux/image-mode[RHEL Image Mode]
+. The https://www.ibm.com/granite[Granite] Large Language Model(s)
+. https://www.redhat.com/en/topics/ai/what-is-instructlab[InstructLab] for model alignment
+. Support and indemnification from Red Hat
+
+https://www.redhat.com/en/topics/ai/what-is-instructlab[InstructLab] is a fully open-source project from Red Hat, and the MIT-IBM Watson AI Lab, that introduces https://arxiv.org/abs/2403.01081[Large-scale Alignment for chatBots] (LAB). The project's innovation helps to simplify the instruction-tuning phase of LLM training. 
+
+However, to fully understand the benefit of this project, you need to be familiar with some basic concepts of what an LLM is and the difficulty and cost associated with training a model.
+
+[#llms]
+=== What is a Large Language Model?
+
+A large language model (LLM) is a type of artificial intelligence (AI) model that uses deep learning techniques to understand and generate human-like text based on input data. These models are designed to analyze vast amounts of text data and learn patterns, relationships, and structures within the data. They can be used for various natural language processing (NLP) tasks, such as:
+
+* *Text classification*: Categorizing text based on its content, such as spam detection or sentiment analysis.
+* *Text summarization*: Generating concise summaries of longer texts, such as news articles or research papers.
+* *Machine translation*: Translating text from one language to another, such as English to French or German to Chinese.
+* *Question answering*: Answering questions based on a given context or set of documents.
+* *Text generation*: Creating new text that is coherent, contextually relevant, and grammatically correct, such as writing articles, stories, or even poetry.
+
+Large language models typically have many parameters (millions to billions) that allow them to capture complex linguistic patterns and relationships in the data. They are trained on large datasets, such as books, articles, and websites, using techniques like unsupervised pre-training and supervised fine-tuning. Some popular large language models include GPT-4, Llama, and Mistral.
+
+In summary, a large language model (LLM) is an artificial intelligence model that uses deep learning techniques to understand and generate human-like text based on input data. They are designed to analyze vast amounts of text data and learn patterns, relationships, and structures within the data, and can be used for various natural language processing tasks.
+
+NOTE: To give you an idea of what an LLM can accomplish, the entire previous section was generated with a simple question against the foundational model you are using in this workshop.
+
+[#how_trained]
+=== How are Large Language Models trained?
+
+Large language models (LLMs) are typically trained using deep learning techniques and large datasets. The training process involves several steps:
+
+. *Data Collection*: A vast amount of text data is collected from various sources, such as books, articles, websites, and databases. The data may include different languages, domains, and styles to ensure the model can generalize well.
+. *Pre-processing*: The raw text data is pre-processed to remove noise, inconsistencies, and irrelevant information. This may include tokenization, lowercasing, stemming, lemmatization, and encoding.
+. *Tokenization*: The pre-processed text data is converted into tokens (words or subwords) that can be used as input and output to the model. Some models use byte-pair encoding (BPE) or subword segmentation to create tokens that can handle out-of-vocabulary words and maintain contextual information.
+. *Pre-training*: The model is trained in an unsupervised or self-supervised manner to learn patterns and structures in the data.
+. *Model Alignment*: (instruction tuning and preference tuning): The process of encoding human values and goals into large language models to make them as helpful, safe, and reliable as possible. This step is not as compute intensive as some of the other steps.
+
+[#granite_intro]
+== Introducing Granite
+
+IBM Granite AI foundational models are cost-efficient, enterprise grade large language models. The Granite family of models are designed to provide enterprises with powerful tools for generative AI and natural language processing (NLP). These models are built to address the specific needs of businesses by leveraging IBM’s decades-long experience in AI, data security, and scalable cloud infrastructure. By focusing on trustworthy, responsible, and secure AI, the Granite models aim to help organizations deploy AI solutions that are not only powerful but also reliable and ethically aligned.
+
+At their core, IBM Granite models are large language models that can understand, generate, and interact with human language. Like other popular LLMs (e.g. GPT, BERT), they are trained on vast amounts of text data, which allows them to perform a variety of NLP tasks, such as text summarization, translation, sentiment analysis, and answering questions. However, IBM Granite models distinguish themselves by being tailored for enterprise use cases, with features that emphasize data privacy, security, and regulatory compliance—critical aspects for industries such as healthcare, finance, and government.
+
+[#granite_models]
+=== Granite Models & Indemnification
+IBM's Granite foundation models stand out not only technically, but also for the strong focus on indemnification, which plays a key role in reassuring enterprises about the safe and secure use of AI technologies. 
+
+Indemnification refers to legal protection provided by IBM to its clients, ensuring that they are shielded from potential legal liabilities arising from the use of AI models, such as issues around intellectual property, copyright infringement, or bias in AI decision-making. 
+
+This aspect of IBM’s Granite models is particularly important for enterprises that operate in highly regulated industries or those dealing with sensitive data, where compliance and risk mitigation are crucial.
+
+It shows that the company stands behind the Granite models, not just from a technical perspective but also from a legal and ethical standpoint. For businesses, this translates into peace of mind. This is critical as AI models, including LLMs, may occasionally produce inaccurate, biased, or controversial outputs, which could lead to legal disputes if not properly managed.
+
+[#instructlab_intro]
+== Introducing InstructLab
+
+At the foundation of RHEL AI is InstructLab.
+
+InstructLab is an open source project, and its mission is to democratize AI and make enhancing an LLM more accessible to the average person. Typically, when someone wants to add new data to a model, it is a very complicated and time consuming process. A significant amount of time and resources go into collecting and preparing data for model fine-tuning, and setting up a model alignment pipeline, all of which requires data scientist expertise.
+
+InstructLab takes a different approach.
+
+When using the InstructLab tooling, users create yaml and markdown text files using plain English. InstructLab then takes care of the heavy lifting from there. This makes adding new knowledge into a model extremely easy. However, as you will see during this lab, creating the data and the necessary files is still a time consuming process.
+
+=== What Differentiates InstructLab?
+
+InstructLab leverages a taxonomy-guided synthetic data generation (SDG) process and a multi-phase tuning framework. SDG allows InstructLab to significantly reduce reliance on expensive human annotations, making contributing to a large language model easy and accessible. 
+
+InstructLab uses an LLM during the process of synthetic data generation, the output of which is used to fine-tune the starter model. This alignment phase becomes most user’s starting point for contributing their knowledge.  Prior to the LAB technique, users typically had no direct involvement in training a LLM. I know this may sound complicated, but hang in there. You will see how easy this is to use.
+
+[#skills_knowledge]
+=== Skills and Knowledge
+
+As you work with InstructLab, you will see the terms *_Skills_* and *_Knowledge_*. What is the difference between Skills and Knowledge? A simple analogy is to think of a skill as [.underline]#teaching someone how# to fish. Knowledge, on the other hand, is [.underline]#knowing# that the best place to catch a Bass is when the sun is setting while casting your line near the trunk of a tree along the bank.
+
+[#getting_started]
+== Getting started with InstructLab
+
+=== Prerequisites for Running InstructLab
+
+The systems you are using during this workshop are hosted on demo.redhat.com, our Red Hat Demo Platform. We are using the default RHEL AI image (leveraging Image Mode RHEL technology) deployed on a machine with adequate storage and 4 NVIDIA L40S GPUs.
+
+As we go through the lab, you will gain a better understanding of disk space and GPU requirements for real world scenarios for your customers. As an example, we require 200GB of disk space just to download the models before even beginning to think about model training. 
+
+=== Special Note for this Version of RHEL AI
+To save time, we recommend running everything as `root`. 
+
+There is a temporary UX issue where every time a command is run, the processing time is long due to an underlying process where the instructlab image is duplicated for the user. Running as root is a workaround. An enhancement will be implemented in a future release to address this issue.
+
+NOTE: Even when running as `root` user, the first time you run the ilab command line tool will take 8-10 seconds. This is because it is creating a container that contains the ilab binaries.
+
+To run every command as root, enter the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+sudo su -
+----
+
+[#verify_ilab]
+=== Verify ilab Installation
+
+NOTE: You will be utilizing at least 2 terminal windows throughout the workshop.
+
+In one terminal, type in the following to see if ilab is installed properly:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab
+----
+
+That was quite of bit of information! Let’s do a version check by entering:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab --version
+----
+
+The response text should indicate that you are running **version 0.19.3**. If you see a different version, please tell your lab proctor.
+
+
+[#view_resources]
+=== Viewing System Resources
+
+The next step is to initialize the ilab configuration and to specify the hardware profile that we want to use. Now is a good time to explore the system that we will be using for the remainder of this lab.
+
+To verify what hardware GPU(s) your ETX lab machine has, you can run the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+nvidia-smi
+----
+
+This will provide you information about the GPU(s) that are installed and configured on your system. For this lab environment, you should see that you have 4xL40s with 48GB of VRAM each. Now we are cooking! That gives us 192GB of VRAM! 
+
+[source,console]
+----
++-----------------------------------------------------------------------------------------+    
+| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |    
+|-----------------------------------------+------------------------+----------------------+    
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |    
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |    
+|                                         |                        |               MIG M. |    
+|=========================================+========================+======================|    
+|   0  NVIDIA L40S                    On  |   00000000:38:00.0 Off |                    0 |    
+| N/A   29C    P8             22W /  350W |       1MiB /  46068MiB |      0%      Default |    
+|                                         |                        |                  N/A |    
++-----------------------------------------+------------------------+----------------------+    
+|   1  NVIDIA L40S                    On  |   00000000:3A:00.0 Off |                    0 |    
+| N/A   28C    P8             22W /  350W |       1MiB /  46068MiB |      0%      Default |    
+|                                         |                        |                  N/A |    
++-----------------------------------------+------------------------+----------------------+    
+|   2  NVIDIA L40S                    On  |   00000000:3C:00.0 Off |                    0 |    
+| N/A   28C    P8             21W /  350W |       1MiB /  46068MiB |      0%      Default |    
+|                                         |                        |                  N/A |    
++-----------------------------------------+------------------------+----------------------+    
+|   3  NVIDIA L40S                    On  |   00000000:3E:00.0 Off |                    0 |    
+| N/A   28C    P8             22W /  350W |       1MiB /  46068MiB |      0%      Default |    
+|                                         |                        |                  N/A |    
++-----------------------------------------+------------------------+----------------------+    
+                                                                                              
++-----------------------------------------------------------------------------------------+    
+| Processes:                                                                              |    
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |    
+|        ID   ID                                                               Usage      |    
+|=========================================================================================|    
+|  No running processes found                                                             |    
++-----------------------------------------------------------------------------------------+    
+----
+
+While we are poking around the system, let’s see how many CPUs and how much memory we have. You can do this with the lscpu or the nproc command:
+
+[source,console,role=execute,subs=attributes+]
+----
+nproc
+----
+
+The output should read `48`. For more detailed information, run the lscpu command:
+
+[source,console,role=execute,subs=attributes+]
+----
+lscpu
+----
+
+The output should show the following:
+
+[source,console]
+----
+Address sizes:                      48 bits physical, 48 bits virtual                          
+Byte Order:                         Little Endian                                              
+CPU(s):                             48                                                         
+On-line CPU(s) list:                0-47                                                       
+Vendor ID:                          AuthenticAMD                                               
+BIOS Vendor ID:                     Advanced Micro Devices, Inc.                               
+Model name:                         AMD EPYC 7R13 Processor                                    
+BIOS Model name:                    AMD EPYC 7R13 Processor                                    
+CPU family:                         25                                                         
+Model:                              1                                                          
+Thread(s) per core:                 2                                                          
+Core(s) per socket:                 24                                                         
+Socket(s):                          1                                                          
+Stepping:                           1                                                          
+BogoMIPS:                           5300.00  
+----
+
+
+By this point, we know we have 48 CPUs and 4 GPUs. The last interesting thing to check is the amount of memory your machine has.
+
+Run the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+cat /proc/meminfo|grep MemTotal
+----
+
+You should see the following output:
+
+[source,console]
+----
+MemTotal:       390846188 kB 
+----
+
+Not too shabby! We are using a system with 48 CPU, 390GB memory, 4 NVIDIA L40S GPUs, and 192GB of VRAM. While this may seem impressive (and it is!), it is important to note that your customers should be using hardware that surpasses this machine by a considerable margin, including the use of NVIDIA A100 or H100 GPUs.
+
+[#initialize_ilab]
+=== Initializing InstructLab
+
+With everything in place and working, it is time to initialize InstructLab. Go to your terminal and type the following command to initialize ilab.
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab config init
+----
+
+During the configuration, RHEL AI will detect the hardware profile we are using. Confirm it is correct by typing `Y`.
+
+A few things happen during initialization. A taxonomy is generated, a configuration file (`config.yaml`) is created in the `/root/.config/instructlab/` directory, and the appropriate training profile is selected to be used during the fine-tuning process.
+
+Let's take a look at this configuration file. Enter the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab config show
+----
+
+Within this configuration you can see all of the default settings. This file can be altered based on a customer’s needs. However, we do not want to encourage customers to adjust many of the settings in this file.
+
+[#download]
+== Download the Models from the Registry
+
+Before you can truly get started with ilab, you will need to download some language models. In customer environments, these will be obtained from the official Red Hat container registry.
+
+[#svc_account]
+=== Creating a Service Account
+
+First, go to https://access.redhat.com/terms-based-registry/ and login to create a new service account.  Follow the steps to create a new account, if needed. (NOTE: Your Red Hat company account may not work. If not, create a new account with another email address.)
+
+Once logged in, click on New Service Account to create a new service account.
+
+image::regserviceacctspage.png[]
+_Figure 1: Registry Service Accounts Page_
+
+In the following form create a new Registry Service Account by entering a Name for the account and an optional Description for the account.
+
+image::serviceacctform.png[]
+_Figure 2: New Registry Service Account form._
+
+NOTE: If you receive a `terms required` error, then click on `Please accept Red Hat's Terms and Conditions` to launch the acceptance process. Read through these terms and accept them. Close the newly created browser tab. 
+
+image::termserror.png[]
+_Figure 3: If you have not accepted the terms and conditions on this login, then you will need to accept them._ 
+
+Once completed, your screen will look something like the following screenshot:
+
+image::newsvcacct.png[]
+
+Now, click on the hyperlinked Account Name to get the credentials needed for the next step: downloading models. 
+
+On the following page, make note of the Username and Password. Click the copy icon to place the entire password token onto the Clipboard.
+
+image::credssvcacct.png[]
+
+Now that you have credentials to the registry, you need to authenticate your RHEL AI machine in order to download the models.
+
+From the command line, enter:
+
+[source,console,role=execute,subs=attributes+]
+----
+podman login registry.redhat.io
+----
+
+Enter the login credentials created in the previous step. When successful,  you should see a response of `“Login Succeeded!”`
+
+You are now ready to start downloading models.
+
+For offline and air-gapped customer scenarios, the entire fine-tuning and model serving process can be done disconnected from the internet, as long as the models are available locally. 
+
+[#dl_base_model]
+=== Downloading the Base Model
+
+Now that you have your credentials set up and ilab initialized, you can download the models that will be used throughout the training process.
+
+First, let’s start with the base Granite model. For this lab, we will be using the Granite 7B starter model. 
+
+Enter the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab model download --repository docker://registry.redhat.io/rhelai1/granite-7b-starter --release latest
+----
+
+This will only take a moment as we have pre-downloaded the models to your system. We want you to go through the motions so you understand the process.
+
+Once the download completes, enter `ilab model list` into the terminal. You should see results similar to the image below in addition to the other preset models.
+
+[source,console]
+----
++-----------------------------------+---------------------+---------+
+| Model Name                        | Last Modified       | Size    |
++-----------------------------------+---------------------+---------+
+| models/granite-7b-starter         | 2024-09-24 14:40:57 | 12.6 GB |
++-----------------------------------+---------------------+---------+
+----
+
+[#serve_base]
+=== Serve and Chat with the Base Model
+
+When the download completes, you have a model that you can serve and chat with locally.
+
+Enter the following command into one of the terminals to chat with the Granite 7B starter model.
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab model serve --model-path /root/.cache/instructlab/models/granite-7b-starter
+----
+
+It will take a moment to start up while vLLM loads the model into the GPU VRAM. When you see the following output, you will be able to continue.
+
+[source,console]
+----
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+----
+
+Now you will utilize your second terminal window that I previously mentioned you would need!
+
+Once the model server is up and running, enter the following commands in the **other** terminal window in order to chat with the base Granite model you just downloaded. 
+
+First, ensure you are running as root in this terminal window:
+
+[source,console,role=execute,subs=attributes+]
+----
+sudo su -
+----
+
+Now enter the `ilab model chat` command:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab model chat --model /root/.cache/instructlab/models/granite-7b-starter
+----
+
+You will know you are successful when the following appears on the screen:
+
+[source,console]
+----
+╭─────────────────────────────────── system ──────────────────────────────────╮
+│ Welcome to InstructLab Chat w/ GRANITE-7B-STARTER (type /h for help)        │
+╰─────────────────────────────────────────────────────────────────────────────╯
+>>>                                                                 [S][default]
+----
+
+If you enter `/h`, you will see a list of commands available in this chat client. Make note of these shortcuts as they will come in handy later.
+
+[source,console]
+----
+╭─────────────────────────────────── system ───────────────────────────────────╮
+│ Help / TL;DR                                                                 │
+│                                                                              │
+│  • /q: quit                                                                  │
+│  • /h: show help                                                             │
+│  • /a assistant: amend assistant (i.e., model)                               │
+│  • /c context: change context                                                │
+│  • /m: toggle multiline (for the next session only)                          │
+│  • /M: toggle multiline                                                      │
+│  • /n: new session                                                           │
+│  • /N: new session (ignoring loaded)                                         │
+│  • /d <int>: display previous response based on input, if passed 1 then      │
+│    previous, if 2 then second last response and so on.                       │
+│  • /p <int>: previous response in plain text based on input, if passed 1     │
+│    then previous, if 2 then second last response and so on.                  │
+│  • /md <int>: previous response in Markdown based on input, if passed 1 then │
+│    previous, if 2 then second last response and so on.                       │
+│  • /s filepath: save current session to filepath                             │
+│  • /l filepath: load filepath and start a new session                        │
+│  • /L filepath: load filepath (permanently) and start a new session          │
+│                                                                              │
+│ Press Alt (or Meta) and Enter or Esc Enter to end multiline input.           │
+╰──────────────────────────────────────────────────────────────────────────────╯
+----
+
+At the chat prompt (`>>>`), enter:
+
+[source,console,role=execute,subs=attributes+]
+----
+What is OpenShift?
+----
+
+You should see something similar to the below output.
+
+NOTE: LLMs by nature are non-deterministic. This means that even with the same prompt input, the model will produce varying responses. So, your results may vary.
+
+[source,console]
+----
+╭─────────────────────────────────────── granite-7b-starter ───────────────────────────────────────╮
+│ OpenShift is an open source container application platform that automates the deployment,        │
+│ scaling, and management of containerized applications. It provides a self-service interface for  │
+│ developers to create, deploy, and manage their applications using a consistent and standardized  │
+│ process. OpenShift includes features such as automated build and deployment, image registries,   │
+│ networking, and security. It is designed to be highly scalable and flexible, allowing            │
+│ organizations to quickly and easily deploy and manage their containerized applications in a      │
+│ production-ready environment. OpenShift is built on Kubernetes, an open source container         │
+│ orchestration platform, and is available as a containerized application platform, a virtual      │
+│ machine image, or a bare metal solution.                                                         │
+╰────────────────────────────────────────────────────────────────────────── elapsed 1.281 seconds ─╯
+----
+
+[#usecase]
+== The Use Case
+
+Now, let’s imagine we work for a fictional insurance company, **Parasol**.
+
+We are an insurance claims agent and we need to know how much it might cost to repair a flux capacitor on a DeLorean (Marty McFly’s famed time travel vehicle from Back To The Future), which is a specific vehicle our company covers. 
+
+We will input information about the DeLorean from Parasol’s collection of internal data, into our large language model that powers our company’s internal chatbot.
+
+See, it’s not just all fun and games!
+
+Now, let’s see what our starter model knows without any fine-tuning. Ask the model the below question in your terminal window where you have the `ilab model chat` command running. 
+
+NOTE: When using the chat interface, it is important to remember that you should begin a new context when switching topics. The will ensure the model is starting fresh. To do this, enter in the `/n` command that we saw when we entered the `/h` command above.
+
+[source,console]
+----
+>>> /n
+>>> How much does it cost to repair a flux capacitor?
+----
+
+As previously stated, the answers you see will vary due to the non-deterministic nature of LLMs. However, the output should indicate that the model knows, roughly, what a flux capacitor is and has a vague understanding of the DeLorean vehicle based on its knowledge of the classic hit movie. 
+
+NOTE: On occasion, the Granite model can sometimes encounter a token generation error resulting in continuous output looping or nonsensical output (different from hallucinations or false information). We are investigating the cause of this intermittent behavior.  Should this happen, press kbd:[CTRL-C] to stop the LLM from answering. 
+
+Back at the chat prompt (`>>>`) enter `/q` or `quit` to exit the session and go back to the main prompt.
+
+You may also stop serving the model in the other terminal window by hitting kbd:[CTRL+C] to stop serving the model.
+
+This model performs adequately, but you will see as you start to ask it more probing, specific questions, it will quickly show it is lacking in general knowledge. That’s because this is a base model and has been only minimally pre-trained, therefore it has little understanding of the world and our specific use case. 
+
+This is by design as it makes the model impressionable and ready to be taught the ways of the world and beloved classic movies. With that in mind, let’s set up the classroom for our base model to learn what we have to teach it.
+
+[#fine-tune]
+== Fine-Tuning the Model for Better Results
+
+We have the base model, but it does not have the knowledge we require in order to do our job as a claims agent. We need more information to process this claim for the Flux Capacitor on a DeLorean DMC-12! In order to get the model up to speed on all things Delorean, we need to teach it what we need it to know.  
+
+[#prep_data]
+=== Preparing the Data
+
+[#doc_convert]
+==== Document Conversion
+
+As you begin to run proof-of-concept activities with your customers, you will typically encounter scenarios where they have data they want to add to the large language model in a format other than what is required by RHEL AI. In order to add new knowledge, RHEL AI needs the following data:
+
+. A question and answer file in `yaml` format.
+. Documents with additional text context used during synthetic data generation in Markdown format.
+
+It is highly unlikely that your customer will already have their data in Markdown format. Therefore, you will need to perform a data transformation or data ingestion process to convert the data into a usable format for InstructLab. 
+
+During this portion of the lab, we will convert a PDF file into Markdown, and then subsequently create our qna.yaml file.
+
+Before we can continue, we need to download the PDF containing detailed information about the DeLorean DMC-12 time travel vehicle. 
+
+Perform the following commands in either terminal window (first ensure you have stopped serving the model or have exited out of chat):
+
+[source,console,role=execute,subs=attributes+]
+----
+cd ~
+mkdir fluxdata
+cd fluxdata
+git clone https://github.com/rhai-code/fluxpdf.git
+----
+
+This will clone the PDF we will use to the local filesystem under the ~/fluxdata/fluxpdf directory.
+
+Now that we have the PDF, we need to convert it to Markdown. There are many tools available to do this. During this lab, we will introduce you to a new project that we are working on in coordination with IBM that aims to be **the best** open source tool for converting documents into a usable format for large language model training. 
+
+This new tool is called https://github.com/DS4SD/docling[**Docling**] and is freely available on GitHub.
+
+**Docling** provides the following features:
+
+. Converts any PDF document to JSON or Markdown format, stable and lightning fast
+. Understands detailed page layout, reading order and recovers table structures
+. Extracts metadata from the document, such as title, authors, references and language
+. Includes OCR support for scanned PDFs
+. Integrates easily with LLM app / RAG frameworks like LlamaIndex 🦙 and LangChain 🦜🔗
+. Provides a simple and convenient CLI
+
+In order to use **Docling**, we need to install it. However, RHEL AI ships with Python 3.9 and docling requires at least Python version 3.10. What should we do?
+
+For the purpose of this lab, we are going to use the tools we have available and perform the document conversion in a container that satisfies the dependencies needed. In near-future releases these document conversion capabilities will be embedded into our product.
+
+Issue the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab shell
+----
+
+The `ilab shell` command will give a terminal inside of the container that contains the ilab command line tool as well as an environment that has Python 3.11.
+
+Enter the following commands:
+
+[source,console,role=execute,subs=attributes+]
+----
+cd ~/fluxdata
+mkdir docling
+cd docling
+python3.11 -m venv venv
+source venv/bin/activate
+pip install docling==1.20
+----
+
+This will take a few minutes to complete. At the end of the install process, you will have Docling available to use as a Python package. 
+
+Now we can convert our PDF:
+
+[source,console,role=execute,subs=attributes+]
+----
+docling --md ~/fluxdata/fluxpdf/flux.pdf
+----
+
+You should see the following output:
+
+[source,console]
+----
+.gitattributes: 100%|██████████████████████████████████████| 1.71k/1.71k [00:00<00:00, 20.9MB/s]
+.gitignore: 100%|██████████████████████████████████████████| 5.18k/5.18k [00:00<00:00, 40.5MB/s]
+(…)artifacts/tableformer/fat/tm_config.json: 100%|█████████| 7.09k/7.09k [00:00<00:00, 65.3MB/s]
+config.json: 100%|████████████████████████████████████████████| 41.0/41.0 [00:00<00:00, 569kB/s]
+(…)del_artifacts/tableformer/tm_config.json: 100%|█████████| 7.09k/7.09k [00:00<00:00, 63.4MB/s]
+README.md: 100%|███████████████████████████████████████████| 3.49k/3.49k [00:00<00:00, 18.4MB/s]
+model.pt: 100%|███████████████████████████████████████████████| 169M/169M [00:00<00:00, 471MB/s]
+otslp_all_standard_094_clean.check: 100%|█████████████████████| 213M/213M [00:00<00:00, 481MB/s]
+otslp_all_fast.check: 100%|███████████████████████████████████| 146M/146M [00:00<00:00, 326MB/s]
+Fetching 9 files: 100%|███████████████████████████████████████████| 9/9 [00:00<00:00, 15.96it/s]
+WARNING:easyocr.easyocr:Downloading detection model, please wait. This may take several minutes depending upon your network connection.
+Progress: |██████████████████████████████████████████████████| 100.0% CompleteINFO:easyocr.easyocr:Download complete
+WARNING:easyocr.easyocr:Downloading recognition model, please wait. This may take several minutes depending upon your network connection.
+Progress: |██████████████████████████████████████████████████| 100.0% CompleteINFO:easyocr.easyocr:Download complete.
+^[[B^[[BINFO:docling.document_converter:Going to convert document batch...
+INFO:docling.document_converter:Processing document flux.pdf
+INFO:docling.document_converter:Finished converting page batch time=4.150
+INFO:docling.document_converter:Finished converting document time-pages=4.16/2
+INFO:docling.cli.main:writing Markdown output to flux.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.33 seconds.
+----
+
+This created a Markdown file in the ~/fluxdata/docling directory called `flux.md`. That is called **WINNING**.
+
+Now that we done with our document conversion, you must exit out of the shell to proceed with the rest of the lab. Simply type the exit command:
+
+[source,console,role=execute,subs=attributes+]
+----
+exit
+----
+
+This will return you to the RHEL AI system. Perform the following command to ensure you have the Markdown file available to you on the host shell.
+
+[source,console,role=execute,subs=attributes+]
+----
+ls -al ~/fluxdata/docling/
+----
+
+You should see the following output:
+
+[source,console]
+----
+drwxr-xr-x. 3 root root   33 Sep 29 17:38 .
+drwxr-xr-x. 4 root root   36 Sep 29 17:34 ..
+-rw-r--r--. 1 root root 2071 Sep 29 17:38 flux.md
+drwxr-xr-x. 6 root root   87 Sep 29 17:36 venv
+----
+
+Take a look at the file to ensure it looks good and accurately reflects what you expect:
+
+[source,console,role=execute,subs=attributes+]
+----
+cat ~/fluxdata/docling/flux.md
+----
+
+Awesome. 
+
+The next step in the process is to add your Markdown (`.md`) file to a git repository. Due to the time constraints of this lab, a repository is provided for you that contains the .md file. However, feel free to practice adding the file to your own git repository if you would like. 
+
+The repository that contains the .md file is located at:
+
+[source,console]
+----
+https://github.com/rhai-code/fluxmd
+----
+
+[#q&a]
+==== Creating the Questions and Answers
+
+Now that we have our Markdown file in a git repository, the next step we need to take is to create a `qna.yaml` file. 
+
+The `qna.yaml` format must include the following fields:
+
+. `**version**`: The version of the qna.yaml file, this is the format of the file used for SDG. The value must be the number 3.
+. `**created_by**`: Your GitHub username.
+. `**domain**`: Specify the category of the knowledge.
+. `**seed_examples**`: A collection of key/value entries.
+.. `**context**`: A chunk of information from the knowledge document. Each qna.yaml needs five context blocks and has a maximum word count of 500 words.
+.. `**questions_and_answers**`: The parameter that holds your questions and answers
+... `**question**`: Specify a question for the model. Each qna.yaml file needs at least three question and answer pairs per context chunk with a maximum word count of 250 words.
+... `**answer**`: Specify the desired answer from the model. Each qna.yaml file needs at least three question and answer pairs per context chunk with a maximum word count of 250 words.
+. `**document_outline**`: Describe an overview of the document your submitting.
+. `**document**`: The source of your knowledge contribution.
+.. `**repo**`: The URL to your repository that holds your knowledge markdown files.
+.. `**commit**`: The SHA of the commit in your repository with your knowledge markdown files.
+.. `**patterns**`: A list of glob patterns specifying the markdown files in your repository. Any glob pattern that starts with *, such as *.md, must be quoted due to YAML rules. For example, *.md.
+
+To save you some time, a template of the `qna.yaml` file has been provided to you as part of this lab. In order to use the template, issue the following commands:
+
+[source,console,role=execute,subs=attributes+]
+----
+cd ~/fluxdata
+git clone https://github.com/rhai-code/fluxmd.git
+cd fluxmd
+----
+
+At this point in the lab, you will need to build out the `qna.yaml` file on your own, using the provided template. 
+
+A proper `qna.yaml` file should have **5** context sections and **3** question and answer pairs for each context. To get you started, here is an example first section:
+
+[source,yaml]
+----
+version: 3
+domain: time_travel
+created_by: Grant Shipley
+seed_examples:
+  - context: |
+      The DeLorean DMC-12 is a sports car manufactured by John DeLorean's DeLorean Motor Company
+      for the American market from 1981 to 1983. The car features gull-wing doors and a stainless-steel body.
+      It gained fame for its appearance as the time machine in the "Back to the Future" film trilogy.
+    questions_and_answers:
+      - question: |
+          When was the DeLorean manufactured?
+        answer: |
+          The DeLorean was manufactured from 1981 to 1983.
+      - question: |
+          Who manufactured the DeLorean DMC-12?
+        answer: |
+          The DeLorean Motor Company manufactured the DeLorean DMC-12.
+      - question: |
+          What type of doors does the DeLorean DMC-12 have?
+        answer: |
+          Gull-wing doors.
+----
+
+Continue building out the rest of your `qna.yaml` file by providing **4** additional context blocks with questions and answers as outlined in the `qna.yaml` template file. Use your favorite terminal-based text editor (the correct one is vi).
+
+**Have FUN!** We'll wait for you.
+
+'''
+
+We know this process is tedious and is where people will spend the most amount of time. We have improvements in our product roadmap to make this data conversion process easier for customers.
+
+For now, to improve your quality of life and to continue with this lab, a valid `qna.yaml` will be provided to you. However, it is **critical** that you understand this process and are able to confidently convert documents and teach your customers how to craft their `qna.yaml` files properly.
+
+If you were able to create a valid `qna.yaml` file, congratulations! **Seriously**, nice job. For those of you that ran out of time, a valid one can be seen here:
+
+[source,console]
+----
+https://raw.githubusercontent.com/rhai-code/backToTheFuture/refs/heads/main/qna.yaml
+----
+
+During the next section of this lab, we will clone the repository containing this file that we will proceed to use for the remainder of the workshop.
+
+[#github_data]
+=== Getting the Training Data
+
+Now that we have learned what it is like to prepare our own dataset, we will obtain our prepared and tested data from GitHub to move forward.
+
+The first step is to clone the repository where we have our `qna.yaml` file with our initial, manually input set of questions and answers. These questions and answers will be later augmented with synthetic data.
+
+Enter the following commands:
+
+[source,console,role=execute,subs=attributes+]
+----
+cd ~/fluxdata
+git clone https://github.com/rhai-code/backToTheFuture.git
+cd backToTheFuture
+----
+
+Let's see what we pulled down from the repository:
+
+[source,console,role=execute,subs=attributes+]
+----
+ls -al
+----
+
+You should see the following:
+
+[source,console]
+----
+total 20
+drwxr-xr-x. 3 root root   84 Sep 29 18:08 .
+drwxr-xr-x. 6 root root   73 Sep 29 18:08 ..
+drwxr-xr-x. 8 root root  163 Sep 29 18:08 .git
+-rw-r--r--. 1 root root  828 Sep 29 18:08 L4_x4.yaml
+-rw-r--r--. 1 root root   17 Sep 29 18:08 README.md
+-rw-r--r--. 1 root root 2253 Sep 29 18:08 data.md
+-rwxr-xr-x. 1 root root 5166 Sep 29 18:08 qna.yaml
+----
+
+We need the `qna.yaml` file. You have just seen this file in the previous section.
+
+Take a peek to be sure everything looks correct. Enter the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+cat qna.yaml
+----
+
+As we've learned, the `qna.yaml` file consists of a list of context chunks and Q&A examples. This  will be used by the teacher model (Mixtral) to generate a larger set of synthetic data. There is also a source document which is a link to a specific commit of a text file in git, where we’ve included that a flux capacitor costs an affordable **$10,000,000**.
+
+Now we are going to leverage the taxonomy structure to teach the starter model more detailed knowledge about the flux capacitor that we need for our insurance claims job at Parasol.
+
+[#prepare_taxonomy]
+=== Setting Up the Taxonomy
+
+InstructLab uses a novel synthetic data-based alignment tuning method for Large Language Models (LLMs.) The "lab" in InstructLab stands for **Large-scale Alignment for chatBots**. The LAB method is driven by taxonomies, which are largely created manually and with care.
+
+InstructLab crowdsources the process of tuning and improving models by collecting two types of data: knowledge and skills in the new InstructLab open source community. These submissions are collected in a taxonomy of YAML files to be used in the synthetic data generation process. 
+
+The way the taxonomy approach works is that we provide a file, named `qna.yaml`, that contains a sample data set of questions and answers. This data set will be used in the process of creating many more synthetic data examples, enough to fully influence the model’s output. The important thing to understand about the `qna.yaml` file is that it must follow a specific schema for InstructLab to use it to synthetically generate more examples.
+
+The `qna.yaml` file is placed in a folder within the knowledge subdirectory of the taxonomy directory. It is placed in a folder with an appropriate name that is aligned with the data topic, as you will see in the below command.
+
+The structure of our taxonomy directory looks something like this:
+
+[source,console]
+----
+├── CODE_OF_CONDUCT.md
+├── compositional_skills
+│   ├── arts
+│   ├── engineering
+│   ├── general
+│   │   └── synonyms
+│   │       ├── attribution.txt
+│   │       └── qna.yaml
+│   ├── geography
+----
+
+To help you better understand the complete directory structure of a taxonomy, refer to the following image:
+
+image::taxonomy.png[]
+
+To see the entire taxonomy tree that gets downloaded by default, you may explore the `/root/.local/share/instructlab/taxonomy` directory.
+
+Since no existing directory exists that quite covers knowledge related to Parasol claims, we will need to add a new directory to the taxonomy.
+
+[source,console,role=execute,subs=attributes+]
+----
+mkdir -p /root/.local/share/instructlab/taxonomy/knowledge/parasol/claims
+----
+
+Enter the following to copy the `qna.yaml` file from the GitHub repository into the correct directory in the taxonomy:
+
+[source,console,role=execute,subs=attributes+]
+----
+cp ~/fluxdata/backToTheFuture/qna.yaml /root/.local/share/instructlab/taxonomy/knowledge/parasol/claims/qna.yaml
+----
+
+Verify the file was copied successfully:
+
+[source,console,role=execute,subs=attributes+]
+----
+cat /root/.local/share/instructlab/taxonomy/knowledge/parasol/claims/qna.yaml | head
+----
+
+Now that your local taxonomy contains your new Parasol claims `qna.yaml` addition, you can confirm that the data addition was done correctly by entering the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab taxonomy diff
+----
+
+The expected response will display the following: 
+
+[source,console]
+----
+knowledge/parasol/claims/qna.yaml
+Taxonomy in /root/.local/share/instructlab/taxonomy is valid :)
+----
+
+You should see several other files listed in the above output in addition to our parasol file. These are sample files for customers to follow as examples. While you could leave them in, customers will likely remove these files and doing so speeds up the synthetic data generation (SDG) process. In testing, we have noted that removing the files reduces the time from 45 minutes to around 7 minutes.
+
+NOTE: Please remove all files that are displayed in the output of the `ilab taxonomy diff` command **except** for our parasol qna.yaml file. If you do not see your parasol file please check that the file was added correctly.
+
+With your local taxonomy data prepared, it is now time to download the other models and  tools needed for synthetic data generation, model training, and model evaluation.
+
+[#all_models]
+=== Downloading the Models Needed for Synthetic Data Generation, Training, and Evaluation
+
+The first model to download is the **Teacher and Critic model** for the SDG (Synthetic Data Generation) phase of the training by entering the following:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab model download --repository docker://registry.redhat.io/rhelai1/mixtral-8x7b-instruct-v0-1 --release latest
+----
+
+While the download may have completed instantly for you due to caching, it is important to understand the scale and size of the models that we are dealing with as part of RHEL AI. Issue the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+df -h ~/.cache/instructlab/
+----
+
+You can see that we are already consuming close to 250GB of disk space just for the models. If you have used the InstructLab project on your laptop, this might be surprising to you. Keep in mind, we are using unquantized models and working directly with .safetensors instead of .gguf formatted files. This provides the highest quality models possible at the end of our fine-tuning process.
+
+Next we will download two additional artifacts required for SDG:
+
+**LoRA layered skills adapter**:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab model download --repository docker://registry.redhat.io/rhelai1/skills-adapter-v3 --release latest
+----
+
+**LoRA layered knowledge adapter**:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab model download --repository docker://registry.redhat.io/rhelai1/knowledge-adapter-v3 --release latest
+----
+
+Finally, we will download the **Judge model** for multi-phase training and evaluation with this command:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab model download --repository docker://registry.redhat.io/rhelai1/prometheus-8x7b-v2-0 --release latest 
+----
+
+Enter `ilab model list` to see the downloaded models. The two LoRA adapters will not display in this command as they are not models, but are each a layer used for our Mixtral model to enhance the SDG process. 
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab model list
+----
+
+[source,console]
+----
++-----------------------------------+---------------------+---------+
+| Model Name                        | Last Modified       | Size    |
++-----------------------------------+---------------------+---------+
+| models/granite-7b-starter         | 2024-09-24 14:40:57 | 12.6 GB |
+| models/mixtral-8x7b-instruct-v0-1 | 2024-09-24 15:05:43 | 87.0 GB |
+| models/prometheus-8x7b-v2-0       | 2024-09-24 15:20:05 | 87.0 GB |
++-----------------------------------+---------------------+---------+
+----
+
+The skills and knowledge adapters can be found in the `/root/.cache/instructlab/models/` directory.
+
+Run the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+ls -al /root/.cache/instructlab/models/
+----
+
+You will see all five in this directory.
+
+[source,console]
+----
+drwxr-xr-x. 2 root root 4096 Sep 24 14:40 granite-7b-starter
+drwxr-xr-x. 2 root root 4096 Sep 24 15:23 knowledge-adapter-v3
+drwxr-xr-x. 2 root root 4096 Sep 24 15:05 mixtral-8x7b-instruct-v0-1
+drwxr-xr-x. 2 root root 4096 Sep 24 15:20 prometheus-8x7b-v2-0
+drwxr-xr-x. 2 root root 4096 Sep 24 15:23 skills-adapter-v3
+----
+
+For a more detailed description of the models, please refer to the https://docs.redhat.com/en/documentation/red_hat_enterprise_linux_ai/1.1/html/building_your_rhel_ai_environment/downloading_ad_models#downloading_ad_models[RHEL AI documentation].
+
+[#sdg]
+== Generating Synthetic Data
+
+Now, let’s move on to the innovative component that sets InstructLab, particularly within RHEL AI, apart from other methods of fine-tuning. With our synthetic data generation pipeline, the InstructLab tooling uses the structure of our taxonomy and the addition of our `qna.yaml` file to generate a large synthetic dataset. This large dataset is required to impact our LLM effectively. The teacher model, Mixtral, assists in this process both in generating the new examples and pruning the dataset for inaccuracies or duplications. 
+
+For this workshop, we are showing you the optimal experience we expect customers to use for production. With a nicely-specced enterprise-grade GPU-accelerated machine the synthetic generation step takes around 10-15 minutes.  These are the machines we have selected for this workshop.
+
+We will now run the command to generate synthetic data. 
+
+NOTE: If either terminal is still serving the Granite model or running a process, kill that process by entering kbd:[CTRL+C]. The data generation will fail if a model is running.
+
+Enter the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+ilab data generate
+----
+
+Do not be alarmed if you see a message similar to the following:
+
+[source,console]
+----
+INFO 2024-09-27 02:09:38,203 instructlab.model.backends.backends:480: Waiting for the vLLM server to start at http://127.0.0.1:33399/v1, this might take a moment... Attempt: 15/120
+----
+
+Eventually, the vLLM server will start and the synthetic data generation will begin.
+
+You will begin to see InstructLab is now synthetically generating examples based on the seed data you provided in the `qna.yaml` file. You will see output on your screen indicating the data is being generated:
+
+[source,console]
+----
+INFO 2024-09-28 03:12:55,518 instructlab.model.backends.backends:487: vLLM engine successfully started at http://127.0.0.1:37211/v1
+Generating synthetic data using '/usr/share/instructlab/sdg/pipelines/agentic' pipeline, '/root/.cache/instructlab/models/mixtral-8x7b-instruct-v0-1' model, '/root/.local/share/instructlab/taxonomy' taxonomy, against http://127.0.0.1:37211/v1 server
+INFO 2024-09-28 03:12:55,974 instructlab.sdg:375: Synthesizing new instructions. If you aren't satisfied with the generated instructions, interrupt training (Ctrl-C) and try adjusting your YAML files. Adding more examples may help.
+INFO 2024-09-28 03:12:56,071 instructlab.sdg.checkpointing:59: No existing checkpoints found in /root/.local/share/instructlab/datasets/checkpoints/knowledge_parasol_claims, generating from scratch
+INFO 2024-09-28 03:12:56,072 instructlab.sdg.pipeline:158: Running pipeline with multi-threaded batching. Using 10 workers for batches of size 8
+INFO 2024-09-28 03:12:56,157 instructlab.sdg.llmblock:51: LLM server supports batched inputs: True
+INFO 2024-09-28 03:12:56,157 instructlab.sdg.pipeline:197: Running block: router
+INFO 2024-09-28 03:12:56,157 instructlab.sdg.pipeline:198: Dataset({
+    features: ['icl_document', 'document', 'document_outline', 'domain', 'icl_query_1', 'icl_query_2', 'icl_query_3', 'icl_response_1', 'icl_response_2', 'icl_response_3'],
+    num_rows: 5
+})
+----
+
+While you are waiting, you can monitor GPU usage by entering this command in the other terminal window.
+
+[source,console,role=execute,subs=attributes+]
+----
+watch nvidia-smi
+----
+
+You will see a report of the GPU activity:
+
+[source,console]
+----
+-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40S                    On  |   00000000:38:00.0 Off |                    0 |
+| N/A   51C    P0            207W /  350W |   40015MiB /  46068MiB |     91%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA L40S                    On  |   00000000:3A:00.0 Off |                    0 |
+| N/A   49C    P0            195W /  350W |   40001MiB /  46068MiB |     89%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   2  NVIDIA L40S                    On  |   00000000:3C:00.0 Off |                    0 |
+| N/A   49C    P0            194W /  350W |   40001MiB /  46068MiB |     90%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   3  NVIDIA L40S                    On  |   00000000:3E:00.0 Off |                    0 |
+| N/A   49C    P0            200W /  350W |   40001MiB /  46068MiB |     90%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A      1931      C   /opt/app-root/bin/python3.11                39998MiB |
+|    1   N/A  N/A      1953      C   /opt/app-root/bin/python3.11                39984MiB |
+|    2   N/A  N/A      1954      C   /opt/app-root/bin/python3.11                39984MiB |
+|    3   N/A  N/A      1955      C   /opt/app-root/bin/python3.11                39984MiB |
++-----------------------------------------------------------------------------------------+
+----
+
+Once the synthetic data generation completes you will see a message similar to the following and be returned to the prompt.
+
+[source,console]
+----
+INFO 2024-09-28 03:17:58,069 instructlab.sdg:438: Generation took 302.55s
+INFO 2024-09-28 03:18:04,395 instructlab.model.backends.backends:351: Waiting for GPU VRAM reclamation...
+----
+
+[#view_sd]
+=== Viewing your New Synthetic Dataset
+
+Let’s take a look at the generated data. The SDG process creates a JSONL file located at 
+
+  /root/.local/share/instructlab/datasets/
+
+The file name format is: 
+
+  knowledge_train_msgs_[TIMESTAMP].jsonl
+
+The exact file name is shown in the finishing output of the `ilab data generate` command. You can find your exact synthetic knowledge data file in the `/root/.local/share/instructlab/datasets` folder, among other file outputs.
+
+Enter the following command to see the contents of the JSONL file. Be sure to adjust what you enter into the terminal based on the timestamp of your JSONL file. 
+
+[source,console, role=execute, subs=attributes+]
+----
+cat /root/.local/share/instructlab/datasets/knowledge_train_msgs_[TIMESTAMP].jsonl
+----
+
+This file contains the synthetically generated data for us to now fine-tune our model with. The contents are challenging to read through, particularly if we were trying to validate and edit the content manually. 
+
+Luckily, we have written a small python script to parse the contents of a SDG file. To inspect the synthetic data with the **sdgparser**, enter in the following commands:
+
+[source,console, role=execute, subs=attributes+]
+----
+cd ~/fluxdata
+git clone https://github.com/rhai-code/sdgparser.git
+cd sdgparser
+python sdgparse.py ~/.local/share/instructlab/datasets/knowledge_train_msgs_[TIMESTAMP.jsonl |less
+----
+
+For example, you would enter in the following command to parse the contents of a file named `knowledge_train_msgs_2024-09-29T19_03_56.jsonl`
+
+[source,console, role=execute, subs=attributes+]
+----
+python sdgparse.py ~/.local/share/instructlab/datasets/knowledge_train_msgs_2024-09-29T19_03_56.jsonl |less
+----
+
+You should see output similar to the following:
+
+[source,console]
+----
+Processing file: /root/.local/share/instructlab/datasets/knowledge_train_msgs_2024-09-29T19_03_56.jsonl
+Question: What type of engine does the DeLorean DMC-12 have?.
+Answer: The DeLorean DMC-12 has a 2.85 L V6 PRV engine.
+
+Question: What are the two transmission options for the DeLorean DMC-12?.
+Answer: The two transmission options for the DeLorean DMC-12 are a 5-speed manual and a 3-speed automatic.
+
+Question: What is the 0-60 mph acceleration time for the DeLorean DMC-12?.
+Answer: The 0-60 mph acceleration time for the DeLorean DMC-12 is approximately 8.8 seconds.
+
+Question: What is the top speed of the DeLorean DMC-12?.
+Answer: The top speed of the DeLorean DMC-12 is 110 mph.
+
+Question: What is the weight of the DeLorean DMC-12?.
+Answer: The weight of the DeLorean DMC-12 is 2,712 lb (1,230 kg).
+
+Question: What is the regular maintenance schedule for the DeLorean DMC-12?.
+Answer: The regular maintenance schedule for the DeLorean DMC-12 includes regular oil changes every 3,000 miles or 3 months, brake fluid change every 2 years, transmission fluid change every 30,000 miles, coolant change every 2 years, and regular battery checks for corrosion and proper connection. The flux capacitor requires regular fluid addition.
+
+Question: What are some common repairs for the DeLorean DMC-12?.
+Answer: Some common repairs for the DeLorean DMC-12 include engine rebuilds
+
+Question: What is the horsepower and torque of the DeLorean DMC-12?.
+Answer: The DeLorean DMC-12 has a horsepower of 130 and a torque of 153 lb-ft.
+
+Question: What is the weight of the DeLorean DMC-12?.
+Answer: The DeLorean DMC-12 weighs around 2,712 lb (1,230 kg).
+
+Question: What is the cost of repairing the engine on a DeLorean DMC-12?.
+Answer: An engine rebuild for a DeLorean DMC-12 costs between $5,000 to $7,000.
+
+......
+----
+
+Pretty neat!
+
+NOTE: The parser is not officially provided from engineering, we created this for our training session. Thus, it is likely imperfect.
+
+Now, let’s use this large synthetic dataset to fine-tune the model.  
+
+[#ft_model]
+== Fine-Tuning the Model
+
+Training using the newly generated data is a time and resource intensive task. Depending on the number of epochs desired, internet connection for safetensor downloading, and other factors, it can take hours or days to really fine tune the model. It is not required to train the model to continue with the lab as we will use an already trained model.
+
+[#one_epoch]
+=== Running One Epoch
+
+Due to the time constraints of this lab, we are not able to fully fine-tune our model. While a fully tuned and trained model will be provided to you, we want you to understand what happens during a real training process.
+
+The best way to illustrate this is by running one **epoch** of training. An epoch in machine learning, in the context of training a model, refers to one complete pass through the entire dataset.
+
+The following command will perform one epoch of fine-tuning. It should take several minutes to complete. Once again, be sure to change the exact filename to reflect the timestamp of your model.  It will be the same JSONL file referenced earlier. Just as before, make sure that you are not serving a model in either of the terminals. We will need all the GPU memory we have.
+
+[source,console, role=execute, subs=attributes+]
+----
+ilab model train --data-path  /root/.local/share/instructlab/datasets/knowledge_train_msgs_[timestamp].jsonl --num-epochs 1 --device=cuda
+----
+
+In several minutes, you should see the following which indicates that the training is complete.
+
+[source,console]
+----
+Model saved in /root/.local/share/instructlab/checkpoints/hf_format/samples_192
+[14:11:51] INFO     saving took 20.465868711471558 seconds                                 utils.py:611
+Epoch 0: 100%|██████████| 2/2 [00:56<00:00, 28.34s/it]
+Operation completed successfully! 🎉
+----
+
+Type in the following command to see the model files that were just created:
+
+[source,console, role=execute, subs=attributes+]
+----
+ls -al /root/.local/share/instructlab/checkpoints/hf_format/samples_192
+----
+
+=== Running a One Epoch Trained Model
+
+By now, you have likely heard how long it takes to train a language model. Yet, we just did it in about five minutes. If you’re wondering what the catch is, let’s chat with the model and see how it performs. The answer will be obvious.
+
+In one of the terminals, enter the following command to serve the model we just created:
+
+[source,console, role=execute, subs=attributes+]
+----
+ilab model serve --model-path /root/.local/share/instructlab/checkpoints/hf_format/samples_192
+----
+
+Once vLLM has started and is accepting requests, in the other terminal, enter the following to chat with the newly-trained model:
+
+[source,console, role=execute, subs=attributes+]
+----
+ilab model chat -gm --model /root/.local/share/instructlab/checkpoints/hf_format/samples_192
+----
+
+You then should see the following response indicating that you are in a chat session:
+
+[source,console]
+----
+╭─────────────────────────────────────────────── system ───────────────────────────────────────╮
+│ Welcome to InstructLab Chat w/ SAMPLES_192 (type /h for help)                                │
+╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+----
+
+Ask the model:
+
+  >>> How much does it cost to replace a flux capacitor in a DeLorean DMC-12 in millions of dollars?
+
+You will see that the accuracy has not improved much, if at all.
+
+Exit the chat by entering `/q` or `quit` and in the other terminal, enter kbd:[CTRL-C] to exit the model server.
+
+Clearly, one epoch won’t cut it. 
+
+Let’s take inspiration from another 1980s classic movie and turn it up to eleven!
+
+[#11_epochs]
+=== Turning it up to Eleven!
+
+Enter the following command to train for 11 epochs:
+
+[source,console, role=execute, subs=attributes+]
+----
+ilab model train --data-path  /root/.local/share/instructlab/datasets/knowledge_train_msgs_[TIMESTAMP].jsonl --num-epochs 11 --device=cuda
+----
+
+This can take up to 20 to 30 minutes to complete.  You can keep tabs on which epoch the system is working on by reading the console output which will report on the state of the training process.
+
+[source,console]
+----
+Epoch: 9, Step: 20, Rank: 1, loss = 0.06584131717681885Epoch: 9, Step: 20, Rank: 3, loss = 0.1316826343536377
+----
+
+Once the training completes, you will see this message:
+
+[source,console]
+----
+Operation completed successfully! 🎉
+----
+
+Just as before, enter the following command in one of the terminals to serve the model we just created:
+
+[source,console, role=execute, subs=attributes+]
+----
+ilab model serve --model-path /root/.local/share/instructlab/checkpoints/hf_format/samples_1472
+----
+
+In the other terminal, enter the following to start chatting with it:
+
+[source,console, role=execute, subs=attributes+]
+----
+ilab model chat --model /root/.local/share/instructlab/checkpoints/hf_format/samples_1472
+----
+
+You then should see the following response indicating that you are back in chat mode:
+
+[source,console]
+----
+╭─────────────────────────────────────────────── system ───────────────────────────────────────╮
+│ Welcome to InstructLab Chat w/ SAMPLES_1472 (type /h for help)                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+----
+
+Now let’s ask,
+
+  >>> How much does it cost to replace a flux capacitor in a DeLorean DMC-12 in millions of dollars?
+
+You should see a more coherent and concise answer.
+
+[source,console]
+----
+╭─────────────────────────────────────── system ────────────────────────────────────────────────╮
+│ Welcome to InstructLab Chat w/ SAMPLES_1472 (type /h for help)                                │
+╰───────────────────────────────────────────────────────────────────────────────────────────────╯
+>>> how much does it cost to replace a flux capacitor in a DeLorean DMC-12 in millions of dollars?                                          
+╭──────────────────────────────────── samples_1472 ─────────────────────────────────────────────╮
+│ The cost of replacing a flux capacitor is $10,000,000.                                        │
+│                                                                                               │
+│                                                                                               │
+╰─────────────────────────────────────────────────────────────────────── elapsed 0.217 seconds ─╯
+----
+
+This performs fairly well. However, if you play with it a bit, the responses may still be inconsistent.
+
+The only way to have a production-ready model is to do a full multi-phased training run.
+
+[#full_train]
+=== Fully Training the Model
+
+In a production environment, neither of the models we've created thus far would work. They would confuse users, spread misinformation, and generally lead to trouble. This underscores the importance of running the entire training cycle. 
+
+Customers are accustomed to models that know a lot about practically everything. These large commercial models (GPT-4, Claude, Gemini, etc.) are trained for months, at costs estimated to be in the hundreds of millions of dollars. Not to mention the amount of physical resources training models at this scale requires.
+
+With Granite and RHEL AI, we are shifting focus to smaller LLMs, which are more easily fine-tuned to specific use cases. Because they have less pre-training data, it is easier to change their mind and add new information.
+
+During this workshop, we do not have time available to experience the joy and excitement of waiting for a full training process to execute. We will give you a fully-trained model, ready to go, for the remainder of this lab. 
+
+However, we want you to understand, at a high level, what a “full training process” is as this is what customers should be running. 
+
+Our RHEL AI training is a multi-phase training strategy. There are two phases:
+
+* **Phase 1**: We take the starter model (granite-7b-starter), and fine-tune it with the synthetic knowledge dataset produced from SDG. This training process outputs a model ‘checkpoint’ after each epoch of training. The checkpoints are evaluated by Prometheus using standard LLM benchmarks. The best model checkpoint goes to Phase 2.
+
+* **Phase 2**: Our model output from phase 1 is now trained on skills data. This skills data is based on data pre-loaded into the RHEL AI product and is focused on ensuring our final model can process, understand, and answer in the most accurate way from the given context. This process outputs new checkpoints for each epoch that runs. The checkpoints can at this point be evaluated by the customer and the ‘best’ one becomes our final model.
+
+The time this takes varies based on infrastructure. Check out our https://docs.redhat.com/en/documentation/red_hat_enterprise_linux_ai/1.1/html/creating_a_custom_llm_using_rhel_ai/train_and_eval#training_process[official documentation] to review the command line process for training. 
+
+Now, let’s try the model we have trained for you.
+
+[#fully_trained_model]
+== Try the Fully Trained Model
+
+Our fully trained model is cached alongside our other models in the `/root/.cache/instructlab/models` directory.
+
+Let's serve and chat with our fully trained model as we've done before:
+
+[source,console, role=execute, subs=attributes+]
+----
+ilab model serve --model-path /root/.cache/instructlab/models/thegshipley/fluxcapacitor
+----
+
+In the other terminal window, issue the `chat` command once again:
+
+[source,console, role=execute, subs=attributes+]
+----
+ilab model chat --model /root/.cache/instructlab/models/thegshipley/fluxcapacitor
+----
+
+Test it out with the same questions. What do you think? 
+
+[#conclusion]
+== Conclusion
+
+Great job! 
+
+The goal here was to get you familiar with the process and hardware needed to fine-tune a LLM via the LAB method and RHEL AI. In that regard, mission accomplished! 
+
+Now that you have gotten a taste of AI engineering, you're likely curious about where to go next. 
+
+The next step in your ETX journey is to take the model and serve it from RHOAI as part of a larger application. The following lab will guide you through those steps.
+
+Beyond ETX, we recommend that you start playing with both skill and knowledge additions. This is to give something "new" to the model. Give the model a chunk of data, something it doesn’t know about, and then train it on that. 
+
+Also, start thinking about how RHEL AI trained models can help your customers achieve their business goals.
+
+As you can see, InstructLab is pretty straightforward. Most of the time you spend will be on curating new model training data. Again, we’re so happy you made it this far, and remember if you have questions we are here to help, and are excited to see what you come up with!
+
+Please visit the official http://www.github.com/instructlab[GitHub project] and check out the community repo to learn about how to get involved with the upstream community! 
+
+Also, learn more about RHEL AI here by reading our https://docs.redhat.com/en/documentation/red_hat_enterprise_linux_ai/[official documentation] and feel free to reach out to the RHEL AI Technical Marketing Team to answer any questions that may come up.
+
+Now let's go to Red Hat OpenShift AI! 
