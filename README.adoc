@@ -1,4 +1,4 @@
-== RHEL AI for Emerging Tech Experience (ETX)
+== RHEL AI for RH One: Lab 10 Experiment to Production-Ready Red Hat AI
 
 This lab provides an in-depth, hands-on experience with RHEL AI and InstructLab, guiding you through the process of understanding, fine-tuning, and improving Large Language Models.
 
