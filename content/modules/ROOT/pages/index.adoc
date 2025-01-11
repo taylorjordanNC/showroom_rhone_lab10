@@ -8,9 +8,9 @@
 [#intro]
 == Introduction to the Lab
 
-Thanks for taking the time to learn about and use RHEL AI at Red Hat Emerging Tech Exchange (ETX). 
+Thanks for taking the time to learn about and use our Red Hat AI portfolio of products at Red Hat One.
 
-During this lab experience, you will learn how to create a fine-tuned version of an IBM Granite model for a fictional insurance company, **Parasol**. You will then deploy this newly enhanced model in RHEL AI. In another lab environment, you will then migrate this model to Red Hat OpenShift AI to complete the RHOAI portion of the lab training. 
+During this lab experience, you will learn how to create a fine-tuned version of an IBM Granite model for a fictional insurance company, **Parasol**. You will then deploy this newly enhanced model in our RHEL AI product. In another lab environment, you will then migrate this model to Red Hat OpenShift AI (RHOAI) to complete the RHOAI portion of the lab training. 
 
 By the end of this RHEL AI portion of the hands-on workshop, you will know what https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux/ai[RHEL AI] is and how you can use it to provide value to our customers. You will also understand to leverage RHEL AI to improve a Large Language Model (LLM), and fine-tune it using synthetic data generation. 
 
@@ -18,7 +18,7 @@ By the end of this RHEL AI portion of the hands-on workshop, you will know what 
 
 To complete the lab you need two terminal windows.
 
-Open two individual terminal tabs or windows and SSH into the demo environments:
+Open two individual terminal tabs or windows on your local machine, and SSH into the demo environments:
 
 From each terminal, enter: **{ssh_command}**, and use **{ssh_password}** for the password to login.
 
@@ -147,110 +147,6 @@ ilab --version
 
 The response text should indicate that you are running **version 0.19.3**. If you see a different version, please tell your lab proctor.
 
-
-[#view_resources]
-=== Viewing System Resources
-
-The next step is to initialize the ilab configuration and to specify the hardware profile that we want to use. Now is a good time to explore the system that we will be using for the remainder of this lab.
-
-To verify what hardware GPU(s) your ETX lab machine has, you can run the following command:
-
-[source,console,role=execute,subs=attributes+]
-----
-nvidia-smi
-----
-
-This will provide you information about the GPU(s) that are installed and configured on your system. For this lab environment, you should see that you have 4xL40s with 48GB of VRAM each. Now we are cooking! That gives us 192GB of VRAM! 
-
-[source,console]
-----
-+-----------------------------------------------------------------------------------------+    
-| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |    
-|-----------------------------------------+------------------------+----------------------+    
-| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |    
-| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |    
-|                                         |                        |               MIG M. |    
-|=========================================+========================+======================|    
-|   0  NVIDIA L40S                    On  |   00000000:38:00.0 Off |                    0 |    
-| N/A   29C    P8             22W /  350W |       1MiB /  46068MiB |      0%      Default |    
-|                                         |                        |                  N/A |    
-+-----------------------------------------+------------------------+----------------------+    
-|   1  NVIDIA L40S                    On  |   00000000:3A:00.0 Off |                    0 |    
-| N/A   28C    P8             22W /  350W |       1MiB /  46068MiB |      0%      Default |    
-|                                         |                        |                  N/A |    
-+-----------------------------------------+------------------------+----------------------+    
-|   2  NVIDIA L40S                    On  |   00000000:3C:00.0 Off |                    0 |    
-| N/A   28C    P8             21W /  350W |       1MiB /  46068MiB |      0%      Default |    
-|                                         |                        |                  N/A |    
-+-----------------------------------------+------------------------+----------------------+    
-|   3  NVIDIA L40S                    On  |   00000000:3E:00.0 Off |                    0 |    
-| N/A   28C    P8             22W /  350W |       1MiB /  46068MiB |      0%      Default |    
-|                                         |                        |                  N/A |    
-+-----------------------------------------+------------------------+----------------------+    
-                                                                                              
-+-----------------------------------------------------------------------------------------+    
-| Processes:                                                                              |    
-|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |    
-|        ID   ID                                                               Usage      |    
-|=========================================================================================|    
-|  No running processes found                                                             |    
-+-----------------------------------------------------------------------------------------+    
-----
-
-While we are poking around the system, let’s see how many CPUs and how much memory we have. You can do this with the lscpu or the nproc command:
-
-[source,console,role=execute,subs=attributes+]
-----
-nproc
-----
-
-The output should read `48`. For more detailed information, run the lscpu command:
-
-[source,console,role=execute,subs=attributes+]
-----
-lscpu
-----
-
-The output should show the following:
-
-[source,console]
-----
-Address sizes:                      48 bits physical, 48 bits virtual                          
-Byte Order:                         Little Endian                                              
-CPU(s):                             48                                                         
-On-line CPU(s) list:                0-47                                                       
-Vendor ID:                          AuthenticAMD                                               
-BIOS Vendor ID:                     Advanced Micro Devices, Inc.                               
-Model name:                         AMD EPYC 7R13 Processor                                    
-BIOS Model name:                    AMD EPYC 7R13 Processor                                    
-CPU family:                         25                                                         
-Model:                              1                                                          
-Thread(s) per core:                 2                                                          
-Core(s) per socket:                 24                                                         
-Socket(s):                          1                                                          
-Stepping:                           1                                                          
-BogoMIPS:                           5300.00  
-----
-
-
-By this point, we know we have 48 CPUs and 4 GPUs. The last interesting thing to check is the amount of memory your machine has.
-
-Run the following command:
-
-[source,console,role=execute,subs=attributes+]
-----
-cat /proc/meminfo|grep MemTotal
-----
-
-You should see the following output:
-
-[source,console]
-----
-MemTotal:       390846188 kB 
-----
-
-Not too shabby! We are using a system with 48 CPU, 390GB memory, 4 NVIDIA L40S GPUs, and 192GB of VRAM. While this may seem impressive (and it is!), it is important to note that your customers should be using hardware that surpasses this machine by a considerable margin, including the use of NVIDIA A100 or H100 GPUs.
-
 [#initialize_ilab]
 === Initializing InstructLab
 
@@ -282,34 +178,17 @@ Before you can truly get started with ilab, you will need to download some langu
 [#svc_account]
 === Creating a Service Account
 
-First, go to https://access.redhat.com/terms-based-registry/ and login to create a new service account.  Follow the steps to create a new account, if needed. (NOTE: Your Red Hat company account may not work. If not, create a new account with another email address.)
+=== Authenticating to the Red Hat Container Registry
 
-Once logged in, click on New Service Account to create a new service account.
+In order to login to the container registry, you need a service account. To save you some time, we will provide you a username and password to use:
 
-image::regserviceacctspage.png[]
-_Figure 1: Registry Service Accounts Page_
+**Username**: 11009103|lab10
 
-In the following form create a new Registry Service Account by entering a Name for the account and an optional Description for the account.
+**Password Token**: eyJhbGciOiJSUzUxMiJ9.eyJzdWIiOiJhZTM4ZWYxMDZjYzE0ZDllOTA1OWFhYjI3ODM4OWYzZCJ9.fjw7qrmV4QzwkFKBFwdkxbwLHJ3wzpNY3jvghF9pMVN7XItVpLHVcFObAqbMWSZGs5RpiO8QhSRVNnGbThgsk2Y2maN3uwxkKD3Ym0ugsS-aqEjOC4-_wuuXBAfT4C_H7JmvE-lv9pIUvrZ9GuqpBhZZYB4XlkNPqm2rRLoEFIdkeTIaEU29hPzcYYdiIIOmIFesCxjNHfQiyvcIeQ8msMzoYiaWuIpdAuCo1DhejNKYRavFlCHkK4tcZk4zTXN7NlJh8n9tZG5Z9W2f1S59LZYmE5dhIcN7okI49XXL3SYDQmpfqplCpqpxS49mgSbqXk6Opjjw-Dy_LCTHM2_VmsFv_IsLYipYOCfZ1NKmxbNg3iwKn7W36oUkddhDATB7EFvJJYohN6rqoNfb-2T4_VK0Dws5QVl-7hXwdyO4lu2zdrIlO3u8NjlQILV0OXiDx8cQP11msr_XBvGlawkK8Yfzp1Zxd_1mnV4SQIyf09fkWWrWlr52cU2c-pVa3EuxhcenKBi65sclXcDNdzhsn7XCnAcLFROAeuSZ-VZYwXuAr0Y8wpeZs0FnLLFH6Ixvyjiu1FdwQJDUp4dPdh-K9g6IC3DLKoxci3D0OenXKfdZ3siUlO-6si9CGqxIAlSDdOlyGwe7jpi0yG6MHUCskRLqmfsze59etSVp033Cr88
 
-image::serviceacctform.png[]
-_Figure 2: New Registry Service Account form._
+NOTE: If you would like to create your own service account, navigate to https://access.redhat.com/terms-based-registry/ and login (SSO) to create a new service account. Follow the steps to create a new account. Once created, you can search for your newly created account by searching for your name in the search bar.
 
-NOTE: If you receive a `terms required` error, then click on `Please accept Red Hat's Terms and Conditions` to launch the acceptance process. Read through these terms and accept them. Close the newly created browser tab. 
-
-image::termserror.png[]
-_Figure 3: If you have not accepted the terms and conditions on this login, then you will need to accept them._ 
-
-Once completed, your screen will look something like the following screenshot:
-
-image::newsvcacct.png[]
-
-Now, click on the hyperlinked Account Name to get the credentials needed for the next step: downloading models. 
-
-On the following page, make note of the Username and Password. Click the copy icon to place the entire password token onto the Clipboard.
-
-image::credssvcacct.png[]
-
-Now that you have credentials to the registry, you need to authenticate your RHEL AI machine in order to download the models.
+Now that you have credentials to the registry, you need to authenticate your RHEL AI machine.
 
 From the command line, enter:
 
@@ -318,16 +197,14 @@ From the command line, enter:
 podman login registry.redhat.io
 ----
 
-Enter the login credentials created in the previous step. When successful,  you should see a response of `“Login Succeeded!”`
+Enter the login credentials as prompted. When successful,  you should see a response of `“Login Succeeded!”`
 
 You are now ready to start downloading models.
-
-For offline and air-gapped customer scenarios, the entire fine-tuning and model serving process can be done disconnected from the internet, as long as the models are available locally. 
 
 [#dl_base_model]
 === Downloading the Base Model
 
-Now that you have your credentials set up and ilab initialized, you can download the models that will be used throughout the training process.
+Now that you have your credentials set up and ilab initialized, you can download the models that will be used throughout our lab experience.
 
 First, let’s start with the base Granite model. For this lab, we will be using the Granite 7B starter model. 
 
@@ -400,35 +277,6 @@ You will know you are successful when the following appears on the screen:
 >>>                                                                 [S][default]
 ----
 
-If you enter `/h`, you will see a list of commands available in this chat client. Make note of these shortcuts as they will come in handy later.
-
-[source,console]
-----
-╭─────────────────────────────────── system ───────────────────────────────────╮
-│ Help / TL;DR                                                                 │
-│                                                                              │
-│  • /q: quit                                                                  │
-│  • /h: show help                                                             │
-│  • /a assistant: amend assistant (i.e., model)                               │
-│  • /c context: change context                                                │
-│  • /m: toggle multiline (for the next session only)                          │
-│  • /M: toggle multiline                                                      │
-│  • /n: new session                                                           │
-│  • /N: new session (ignoring loaded)                                         │
-│  • /d <int>: display previous response based on input, if passed 1 then      │
-│    previous, if 2 then second last response and so on.                       │
-│  • /p <int>: previous response in plain text based on input, if passed 1     │
-│    then previous, if 2 then second last response and so on.                  │
-│  • /md <int>: previous response in Markdown based on input, if passed 1 then │
-│    previous, if 2 then second last response and so on.                       │
-│  • /s filepath: save current session to filepath                             │
-│  • /l filepath: load filepath and start a new session                        │
-│  • /L filepath: load filepath (permanently) and start a new session          │
-│                                                                              │
-│ Press Alt (or Meta) and Enter or Esc Enter to end multiline input.           │
-╰──────────────────────────────────────────────────────────────────────────────╯
-----
-
 At the chat prompt (`>>>`), enter:
 
 [source,console,role=execute,subs=attributes+]
@@ -468,8 +316,6 @@ See, it’s not just all fun and games!
 
 Now, let’s see what our starter model knows without any fine-tuning. Ask the model the below question in your terminal window where you have the `ilab model chat` command running. 
 
-NOTE: When using the chat interface, it is important to remember that you should begin a new context when switching topics. The will ensure the model is starting fresh. To do this, enter in the `/n` command that we saw when we entered the `/h` command above.
-
 [source,console]
 ----
 >>> /n
@@ -478,15 +324,13 @@ NOTE: When using the chat interface, it is important to remember that you should
 
 As previously stated, the answers you see will vary due to the non-deterministic nature of LLMs. However, the output should indicate that the model knows, roughly, what a flux capacitor is and has a vague understanding of the DeLorean vehicle based on its knowledge of the classic hit movie. 
 
-NOTE: On occasion, the Granite model can sometimes encounter a token generation error resulting in continuous output looping or nonsensical output (different from hallucinations or false information). We are investigating the cause of this intermittent behavior.  Should this happen, press kbd:[CTRL-C] to stop the LLM from answering. 
-
 Back at the chat prompt (`>>>`) enter `/q` or `quit` to exit the session and go back to the main prompt.
 
 You may also stop serving the model in the other terminal window by hitting kbd:[CTRL+C] to stop serving the model.
 
-This model performs adequately, but you will see as you start to ask it more probing, specific questions, it will quickly show it is lacking in general knowledge. That’s because this is a base model and has been only minimally pre-trained, therefore it has little understanding of the world and our specific use case. 
+This model performs adequately, but you will see as you start to ask it more probing, specific questions, it will not perform as well as you'd like or expect. This is our "student" model, which is a slightly fine-tuned version of the Granite base model. The base model is essentially a "raw" version of a the Granite foundation model family. Specifically, it is not instruction-tuned, meaning it's not able to respond to instructions, or questions, well. This is by design, as it cannot be overly aligned before attempting to fine tune additional private data into the model.
 
-This is by design as it makes the model impressionable and ready to be taught the ways of the world and beloved classic movies. With that in mind, let’s set up the classroom for our base model to learn what we have to teach it.
+With that in mind, let’s set up the classroom for our base model to learn what we have to teach it.
 
 [#fine-tune]
 == Fine-Tuning the Model for Better Results
@@ -497,143 +341,33 @@ We have the base model, but it does not have the knowledge we require in order t
 === Preparing the Data
 
 [#doc_convert]
-==== Document Conversion
+==== Document Conversion with Docling
 
-As you begin to run proof-of-concept activities with your customers, you will typically encounter scenarios where they have data they want to add to the large language model in a format other than what is required by RHEL AI. In order to add new knowledge, RHEL AI needs the following data:
+In order to add new knowledge, RHEL AI needs the following data:
 
-. A question and answer file in `yaml` format.
-. Documents with additional text context used during synthetic data generation in Markdown format.
+. markdown source document(s): documents with the desired data you wish to fine-tune the model with, in markdown format. These files are hosted in a private or public Git repository.
+. `qna.yaml` file(s): A yaml-formatted file with select sections from the source markdown file(s), and pairs of question and answers for each section, to serve as instruction examples for the teacher model during synthetic data generation. The teacher nodel creates a larger synthetic dataset of questions and answers about your source document(s) based on your manually created Q&A examples. 
 
-It is highly unlikely that your customer will already have their data in Markdown format. Therefore, you will need to perform a data transformation or data ingestion process to convert the data into a usable format for InstructLab. 
+It is highly unlikely that our customers will already have their data in Markdown format. Therefore, we will work with customers to perform a data transformation to convert the data into a usable format for InstructLab. 
 
-During this portion of the lab, we will convert a PDF file into Markdown, and then subsequently create our qna.yaml file.
+During this portion of the lab, you will see how to convert a PDF file into markdown, and then subsequently create a `qna.yaml` file.
 
-Before we can continue, we need to download the PDF containing detailed information about the DeLorean DMC-12 time travel vehicle. 
+There are many tools available to convert document formats. During this lab, we will introduce you to a project that we are working on in coordination with IBM that aims to be **the best** open source tool for converting documents into a usable format for large language model training: https://github.com/DS4SD/docling[**Docling**]. Docling is freely available on GitHub for download and use.
 
-Perform the following commands in either terminal window (first ensure you have stopped serving the model or have exited out of chat):
-
-[source,console,role=execute,subs=attributes+]
-----
-cd ~
-mkdir fluxdata
-cd fluxdata
-git clone https://github.com/rhai-code/fluxpdf.git
-----
-
-This will clone the PDF we will use to the local filesystem under the ~/fluxdata/fluxpdf directory.
-
-Now that we have the PDF, we need to convert it to Markdown. There are many tools available to do this. During this lab, we will introduce you to a new project that we are working on in coordination with IBM that aims to be **the best** open source tool for converting documents into a usable format for large language model training. 
-
-This new tool is called https://github.com/DS4SD/docling[**Docling**] and is freely available on GitHub.
+NOTE: Docling is now also embedded in RHEL AI as a part of the InstructLab pipeline. This implementation is relatively new, and we still see value in working on data preparation ahead of beginning the InstructLab process. Therefore, we will be discussing using Docling separately and manually.
 
 **Docling** provides the following features:
 
-. Converts any PDF document to JSON or Markdown format, stable and lightning fast
+. Reads popular document formats (PDF, DOCX, PPTX, XLSX, Images, HTML, AsciiDoc & Markdown) and exports to HTML, Markdown and JSON (with embedded and referenced images)
 . Understands detailed page layout, reading order and recovers table structures
 . Extracts metadata from the document, such as title, authors, references and language
 . Includes OCR support for scanned PDFs
 . Integrates easily with LLM app / RAG frameworks like LlamaIndex 🦙 and LangChain 🦜🔗
 . Provides a simple and convenient CLI
 
-In order to use **Docling**, we need to install it. However, RHEL AI ships with Python 3.9 and docling requires at least Python version 3.10. What should we do?
+Data preparation for InstructLab (as for any other type of training) will take care and time. We do not have time do go through this process within the lab experience. Instead we will move forward with converted .md content to prepare our qna.yaml file. However, we recommend trying Docling out on your own time to see how it works.
 
-For the purpose of this lab, we are going to use the tools we have available and perform the document conversion in a container that satisfies the dependencies needed. In near-future releases these document conversion capabilities will be embedded into our product.
-
-Issue the following command:
-
-[source,console,role=execute,subs=attributes+]
-----
-ilab shell
-----
-
-The `ilab shell` command will give a terminal inside of the container that contains the ilab command line tool as well as an environment that has Python 3.11.
-
-Enter the following commands:
-
-[source,console,role=execute,subs=attributes+]
-----
-cd ~/fluxdata
-mkdir docling
-cd docling
-python3.11 -m venv venv
-source venv/bin/activate
-pip install docling==1.20
-----
-
-This will take a few minutes to complete. At the end of the install process, you will have Docling available to use as a Python package. 
-
-Now we can convert our PDF:
-
-[source,console,role=execute,subs=attributes+]
-----
-docling --md ~/fluxdata/fluxpdf/flux.pdf
-----
-
-You should see the following output:
-
-[source,console]
-----
-.gitattributes: 100%|██████████████████████████████████████| 1.71k/1.71k [00:00<00:00, 20.9MB/s]
-.gitignore: 100%|██████████████████████████████████████████| 5.18k/5.18k [00:00<00:00, 40.5MB/s]
-(…)artifacts/tableformer/fat/tm_config.json: 100%|█████████| 7.09k/7.09k [00:00<00:00, 65.3MB/s]
-config.json: 100%|████████████████████████████████████████████| 41.0/41.0 [00:00<00:00, 569kB/s]
-(…)del_artifacts/tableformer/tm_config.json: 100%|█████████| 7.09k/7.09k [00:00<00:00, 63.4MB/s]
-README.md: 100%|███████████████████████████████████████████| 3.49k/3.49k [00:00<00:00, 18.4MB/s]
-model.pt: 100%|███████████████████████████████████████████████| 169M/169M [00:00<00:00, 471MB/s]
-otslp_all_standard_094_clean.check: 100%|█████████████████████| 213M/213M [00:00<00:00, 481MB/s]
-otslp_all_fast.check: 100%|███████████████████████████████████| 146M/146M [00:00<00:00, 326MB/s]
-Fetching 9 files: 100%|███████████████████████████████████████████| 9/9 [00:00<00:00, 15.96it/s]
-WARNING:easyocr.easyocr:Downloading detection model, please wait. This may take several minutes depending upon your network connection.
-Progress: |██████████████████████████████████████████████████| 100.0% CompleteINFO:easyocr.easyocr:Download complete
-WARNING:easyocr.easyocr:Downloading recognition model, please wait. This may take several minutes depending upon your network connection.
-Progress: |██████████████████████████████████████████████████| 100.0% CompleteINFO:easyocr.easyocr:Download complete.
-^[[B^[[BINFO:docling.document_converter:Going to convert document batch...
-INFO:docling.document_converter:Processing document flux.pdf
-INFO:docling.document_converter:Finished converting page batch time=4.150
-INFO:docling.document_converter:Finished converting document time-pages=4.16/2
-INFO:docling.cli.main:writing Markdown output to flux.md
-INFO:docling.cli.main:Processed 1 docs, of which 0 failed
-INFO:docling.cli.main:All documents were converted in 4.33 seconds.
-----
-
-This created a Markdown file in the ~/fluxdata/docling directory called `flux.md`. That is called **WINNING**.
-
-Now that we done with our document conversion, you must exit out of the shell to proceed with the rest of the lab. Simply type the exit command:
-
-[source,console,role=execute,subs=attributes+]
-----
-exit
-----
-
-This will return you to the RHEL AI system. Perform the following command to ensure you have the Markdown file available to you on the host shell.
-
-[source,console,role=execute,subs=attributes+]
-----
-ls -al ~/fluxdata/docling/
-----
-
-You should see the following output:
-
-[source,console]
-----
-drwxr-xr-x. 3 root root   33 Sep 29 17:38 .
-drwxr-xr-x. 4 root root   36 Sep 29 17:34 ..
--rw-r--r--. 1 root root 2071 Sep 29 17:38 flux.md
-drwxr-xr-x. 6 root root   87 Sep 29 17:36 venv
-----
-
-Take a look at the file to ensure it looks good and accurately reflects what you expect:
-
-[source,console,role=execute,subs=attributes+]
-----
-cat ~/fluxdata/docling/flux.md
-----
-
-Awesome. 
-
-The next step in the process is to add your Markdown (`.md`) file to a git repository. Due to the time constraints of this lab, a repository is provided for you that contains the .md file. However, feel free to practice adding the file to your own git repository if you would like. 
-
-The repository that contains the .md file is located at:
+Once your documents are converted to .md, the next step in the process is to add the .md file(s) to a git repository. This repository may be private or public. Due to the time constraints of this lab, a repository is provided for you that contains the .md file for our example. Feel free to review the document and format.
 
 [source,console]
 ----
@@ -651,28 +385,17 @@ The `qna.yaml` format must include the following fields:
 . `**created_by**`: Your GitHub username.
 . `**domain**`: Specify the category of the knowledge.
 . `**seed_examples**`: A collection of key/value entries.
-.. `**context**`: A chunk of information from the knowledge document. Each qna.yaml needs five context blocks and has a maximum word count of 500 words.
-.. `**questions_and_answers**`: The parameter that holds your questions and answers
-... `**question**`: Specify a question for the model. Each qna.yaml file needs at least three question and answer pairs per context chunk with a maximum word count of 250 words.
-... `**answer**`: Specify the desired answer from the model. Each qna.yaml file needs at least three question and answer pairs per context chunk with a maximum word count of 250 words.
+.. `**context**`: A chunk of information taken verbatim from the source .md document. Each qna.yaml needs five context blocks and has a maximum token count of 500.
+.. `**questions_and_answers**`: The parameter that holds your questions and answers. Each question and answer pair serves as examples for the teacher LLM to use when creating a larger set of Q&A about the source document(s).
+... `**question**`: Specify a question about the content of the associated section of context. Each qna.yaml file needs at least three question and answer pairs per context chunk with a maximum token count of 250.
+... `**answer**`: Specify the answer to the question, based on the associated context. Each qna.yaml file needs at least three question and answer pairs per context chunk with a maximum word count of 250 words.
 . `**document_outline**`: Describe an overview of the document your submitting.
 . `**document**`: The source of your knowledge contribution.
 .. `**repo**`: The URL to your repository that holds your knowledge markdown files.
 .. `**commit**`: The SHA of the commit in your repository with your knowledge markdown files.
 .. `**patterns**`: A list of glob patterns specifying the markdown files in your repository. Any glob pattern that starts with *, such as *.md, must be quoted due to YAML rules. For example, *.md.
 
-To save you some time, a template of the `qna.yaml` file has been provided to you as part of this lab. In order to use the template, issue the following commands:
-
-[source,console,role=execute,subs=attributes+]
-----
-cd ~/fluxdata
-git clone https://github.com/rhai-code/fluxmd.git
-cd fluxmd
-----
-
-At this point in the lab, you will need to build out the `qna.yaml` file on your own, using the provided template. 
-
-A proper `qna.yaml` file should have **5** context sections and **3** question and answer pairs for each context. To get you started, here is an example first section:
+A proper `qna.yaml` file should have **5** context sections and **3** question and answer pairs for each context. Here is an example first section:
 
 [source,yaml]
 ----
@@ -699,24 +422,13 @@ seed_examples:
           Gull-wing doors.
 ----
 
-Continue building out the rest of your `qna.yaml` file by providing **4** additional context blocks with questions and answers as outlined in the `qna.yaml` template file. Use your favorite terminal-based text editor (the correct one is vi).
+There is a lot to this data preparation step and we do not have time to go as deep as preferred, but we will highlight several points of important guidance about the `qna.yaml` file and .md source document(s):
 
-**Have FUN!** We'll wait for you.
+. The source .md content must be in clean, valid markdown format. Ensure complex formatting such as tables have converted properly before proceeding to the `qna.yaml` generation step.
+. The context sections of the `qna.yaml` is taken directly from the .md file. The sections are chosen with care, ensuring variety of content from throughout the entirety of the source documents.
+. Ensure the associated Q&A avoids yes/no answers, and always stays true to the content of the context section. It should not reference information outside of that chunk of context.
 
-'''
-
-We know this process is tedious and is where people will spend the most amount of time. We have improvements in our product roadmap to make this data conversion process easier for customers.
-
-For now, to improve your quality of life and to continue with this lab, a valid `qna.yaml` will be provided to you. However, it is **critical** that you understand this process and are able to confidently convert documents and teach your customers how to craft their `qna.yaml` files properly.
-
-If you were able to create a valid `qna.yaml` file, congratulations! **Seriously**, nice job. For those of you that ran out of time, a valid one can be seen here:
-
-[source,console]
-----
-https://raw.githubusercontent.com/rhai-code/backToTheFuture/refs/heads/main/qna.yaml
-----
-
-During the next section of this lab, we will clone the repository containing this file that we will proceed to use for the remainder of the workshop.
+Again, there is much to this. If you engage with customers and feel you need deeper data preparation training that you have not yet received, please reach out to your regional AI SSA team.
 
 [#github_data]
 === Getting the Training Data
@@ -771,15 +483,11 @@ Now we are going to leverage the taxonomy structure to teach the starter model m
 [#prepare_taxonomy]
 === Setting Up the Taxonomy
 
-InstructLab uses a novel synthetic data-based alignment tuning method for Large Language Models (LLMs.) The "lab" in InstructLab stands for **Large-scale Alignment for chatBots**. The LAB method is driven by taxonomies, which are largely created manually and with care.
+InstructLab uses a novel synthetic data-based alignment tuning method for Large Language Models (LLMs.) The "lab" in InstructLab stands for **Large-scale Alignment for chatBots**. The LAB method is driven by taxonomies, which are created manually and with care.
 
-InstructLab crowdsources the process of tuning and improving models by collecting two types of data: knowledge and skills in the new InstructLab open source community. These submissions are collected in a taxonomy of YAML files to be used in the synthetic data generation process. 
+The way the taxonomy approach works is that the `qna.yaml` file is placed in a folder within the knowledge subdirectory of the taxonomy directory. It is placed in a folder with an appropriate name that is aligned with the data topic, as you will see in the below command.
 
-The way the taxonomy approach works is that we provide a file, named `qna.yaml`, that contains a sample data set of questions and answers. This data set will be used in the process of creating many more synthetic data examples, enough to fully influence the model’s output. The important thing to understand about the `qna.yaml` file is that it must follow a specific schema for InstructLab to use it to synthetically generate more examples.
-
-The `qna.yaml` file is placed in a folder within the knowledge subdirectory of the taxonomy directory. It is placed in a folder with an appropriate name that is aligned with the data topic, as you will see in the below command.
-
-The structure of our taxonomy directory looks something like this:
+The structure of our taxonomy directory might look something like this:
 
 [source,console]
 ----
@@ -798,9 +506,16 @@ To help you better understand the complete directory structure of a taxonomy, re
 
 image::taxonomy.png[]
 
-To see the entire taxonomy tree that gets downloaded by default, you may explore the `/root/.local/share/instructlab/taxonomy` directory.
+When configuring InstructLab, a taxonomy directory is set up with some sample `qna.yaml` files. These are for example for our customers. The three core most important folders are `knowledge`, `compositional_skills` and `foundational_skills` to classify our data inputs into either skill or knowledge contributions.
 
-Since no existing directory exists that quite covers knowledge related to Parasol claims, we will need to add a new directory to the taxonomy.
+For our purposes, we do not need the sample files. Let's delete the preset taxonomy before creating our own:
+
+[source,console,role=execute,subs=attributes+]
+----
+rm -rf /root/.local/share/instructlab/taxonomy
+----
+
+Now setup the new taxonomy directory with the folder structure needed to add our parasol data file:
 
 [source,console,role=execute,subs=attributes+]
 ----
@@ -835,10 +550,6 @@ The expected response will display the following:
 knowledge/parasol/claims/qna.yaml
 Taxonomy in /root/.local/share/instructlab/taxonomy is valid :)
 ----
-
-You should see several other files listed in the above output in addition to our parasol file. These are sample files for customers to follow as examples. While you could leave them in, customers will likely remove these files and doing so speeds up the synthetic data generation (SDG) process. In testing, we have noted that removing the files reduces the time from 45 minutes to around 7 minutes.
-
-NOTE: Please remove all files that are displayed in the output of the `ilab taxonomy diff` command **except** for our parasol qna.yaml file. If you do not see your parasol file please check that the file was added correctly.
 
 With your local taxonomy data prepared, it is now time to download the other models and  tools needed for synthetic data generation, model training, and model evaluation.
 
@@ -927,7 +638,7 @@ For a more detailed description of the models, please refer to the https://docs.
 [#sdg]
 == Generating Synthetic Data
 
-Now, let’s move on to the innovative component that sets InstructLab, particularly within RHEL AI, apart from other methods of fine-tuning. With our synthetic data generation pipeline, the InstructLab tooling uses the structure of our taxonomy and the addition of our `qna.yaml` file to generate a large synthetic dataset. This large dataset is required to impact our LLM effectively. The teacher model, Mixtral, assists in this process both in generating the new examples and pruning the dataset for inaccuracies or duplications. 
+Now, let’s move on to the innovative component that sets InstructLab apart from other methods of fine-tuning. With our synthetic data generation pipeline, the InstructLab tooling uses the structure of our taxonomy and the addition of our `qna.yaml` file to generate a large synthetic dataset. This large dataset is required to impact our LLM effectively. The teacher model, Mixtral, assists in this process both in generating the new examples and pruning the dataset for inaccuracies or duplications. 
 
 For this workshop, we are showing you the optimal experience we expect customers to use for production. With a nicely-specced enterprise-grade GPU-accelerated machine the synthetic generation step takes around 10-15 minutes.  These are the machines we have selected for this workshop.
 
@@ -968,53 +679,6 @@ INFO 2024-09-28 03:12:56,157 instructlab.sdg.pipeline:198: Dataset({
 })
 ----
 
-While you are waiting, you can monitor GPU usage by entering this command in the other terminal window.
-
-[source,console,role=execute,subs=attributes+]
-----
-watch nvidia-smi
-----
-
-You will see a report of the GPU activity:
-
-[source,console]
-----
------------------------------------------------------------------------------------------+
-| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |
-|-----------------------------------------+------------------------+----------------------+
-| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
-|                                         |                        |               MIG M. |
-|=========================================+========================+======================|
-|   0  NVIDIA L40S                    On  |   00000000:38:00.0 Off |                    0 |
-| N/A   51C    P0            207W /  350W |   40015MiB /  46068MiB |     91%      Default |
-|                                         |                        |                  N/A |
-+-----------------------------------------+------------------------+----------------------+
-|   1  NVIDIA L40S                    On  |   00000000:3A:00.0 Off |                    0 |
-| N/A   49C    P0            195W /  350W |   40001MiB /  46068MiB |     89%      Default |
-|                                         |                        |                  N/A |
-+-----------------------------------------+------------------------+----------------------+
-|   2  NVIDIA L40S                    On  |   00000000:3C:00.0 Off |                    0 |
-| N/A   49C    P0            194W /  350W |   40001MiB /  46068MiB |     90%      Default |
-|                                         |                        |                  N/A |
-+-----------------------------------------+------------------------+----------------------+
-|   3  NVIDIA L40S                    On  |   00000000:3E:00.0 Off |                    0 |
-| N/A   49C    P0            200W /  350W |   40001MiB /  46068MiB |     90%      Default |
-|                                         |                        |                  N/A |
-+-----------------------------------------+------------------------+----------------------+
-                                                                                         
-+-----------------------------------------------------------------------------------------+
-| Processes:                                                                              |
-|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
-|        ID   ID                                                               Usage      |
-|=========================================================================================|
-|    0   N/A  N/A      1931      C   /opt/app-root/bin/python3.11                39998MiB |
-|    1   N/A  N/A      1953      C   /opt/app-root/bin/python3.11                39984MiB |
-|    2   N/A  N/A      1954      C   /opt/app-root/bin/python3.11                39984MiB |
-|    3   N/A  N/A      1955      C   /opt/app-root/bin/python3.11                39984MiB |
-+-----------------------------------------------------------------------------------------+
-----
-
 Once the synthetic data generation completes you will see a message similar to the following and be returned to the prompt.
 
 [source,console]
@@ -1024,7 +688,7 @@ INFO 2024-09-28 03:18:04,395 instructlab.model.backends.backends:351: Waiting fo
 ----
 
 [#view_sd]
-=== Viewing your New Synthetic Dataset
+=== [Optional] Viewing your New Synthetic Dataset
 
 Let’s take a look at the generated data. The SDG process creates a JSONL file located at 
 
@@ -1102,7 +766,7 @@ Answer: An engine rebuild for a DeLorean DMC-12 costs between $5,000 to $7,000.
 
 Pretty neat!
 
-NOTE: The parser is not officially provided from engineering, we created this for our training session. Thus, it is likely imperfect.
+NOTE: The parser is not officially provided from engineering, we created this for our training session. Thus, it is imperfect.
 
 Now, let’s use this large synthetic dataset to fine-tune the model.  
 
@@ -1181,87 +845,10 @@ Clearly, one epoch won’t cut it.
 
 Let’s take inspiration from another 1980s classic movie and turn it up to eleven!
 
-[#11_epochs]
-=== Turning it up to Eleven!
-
-Enter the following command to train for 11 epochs:
-
-[source,console, role=execute, subs=attributes+]
-----
-ilab model train --data-path  /root/.local/share/instructlab/datasets/knowledge_train_msgs_[TIMESTAMP].jsonl --num-epochs 11 --device=cuda
-----
-
-This can take up to 20 to 30 minutes to complete.  You can keep tabs on which epoch the system is working on by reading the console output which will report on the state of the training process.
-
-[source,console]
-----
-Epoch: 9, Step: 20, Rank: 1, loss = 0.06584131717681885Epoch: 9, Step: 20, Rank: 3, loss = 0.1316826343536377
-----
-
-Once the training completes, you will see this message:
-
-[source,console]
-----
-Operation completed successfully! 🎉
-----
-
-Just as before, enter the following command in one of the terminals to serve the model we just created:
-
-[source,console, role=execute, subs=attributes+]
-----
-ilab model serve --model-path /root/.local/share/instructlab/checkpoints/hf_format/samples_1472
-----
-
-In the other terminal, enter the following to start chatting with it:
-
-[source,console, role=execute, subs=attributes+]
-----
-ilab model chat --model /root/.local/share/instructlab/checkpoints/hf_format/samples_1472
-----
-
-You then should see the following response indicating that you are back in chat mode:
-
-[source,console]
-----
-╭─────────────────────────────────────────────── system ───────────────────────────────────────╮
-│ Welcome to InstructLab Chat w/ SAMPLES_1472 (type /h for help)                               │
-╰──────────────────────────────────────────────────────────────────────────────────────────────╯
-
-----
-
-Now let’s ask,
-
-  >>> How much does it cost to replace a flux capacitor in a DeLorean DMC-12 in millions of dollars?
-
-You should see a more coherent and concise answer.
-
-[source,console]
-----
-╭─────────────────────────────────────── system ────────────────────────────────────────────────╮
-│ Welcome to InstructLab Chat w/ SAMPLES_1472 (type /h for help)                                │
-╰───────────────────────────────────────────────────────────────────────────────────────────────╯
->>> how much does it cost to replace a flux capacitor in a DeLorean DMC-12 in millions of dollars?                                          
-╭──────────────────────────────────── samples_1472 ─────────────────────────────────────────────╮
-│ The cost of replacing a flux capacitor is $10,000,000.                                        │
-│                                                                                               │
-│                                                                                               │
-╰─────────────────────────────────────────────────────────────────────── elapsed 0.217 seconds ─╯
-----
-
-This performs fairly well. However, if you play with it a bit, the responses may still be inconsistent.
-
-The only way to have a production-ready model is to do a full multi-phased training run.
-
 [#full_train]
 === Fully Training the Model
 
-In a production environment, neither of the models we've created thus far would work. They would confuse users, spread misinformation, and generally lead to trouble. This underscores the importance of running the entire training cycle. 
-
-Customers are accustomed to models that know a lot about practically everything. These large commercial models (GPT-4, Claude, Gemini, etc.) are trained for months, at costs estimated to be in the hundreds of millions of dollars. Not to mention the amount of physical resources training models at this scale requires.
-
-With Granite and RHEL AI, we are shifting focus to smaller LLMs, which are more easily fine-tuned to specific use cases. Because they have less pre-training data, it is easier to change their mind and add new information.
-
-During this workshop, we do not have time available to experience the joy and excitement of waiting for a full training process to execute. We will give you a fully-trained model, ready to go, for the remainder of this lab. 
+In a production environment, a short, incomplete training run would not work of course. During this workshop, we do not have time available to experience the joy and excitement of waiting for a full training process to execute. We will give you a fully-trained model, ready to go, for the remainder of this lab. 
 
 However, we want you to understand, at a high level, what a “full training process” is as this is what customers should be running. 
 
@@ -1305,16 +892,12 @@ The goal here was to get you familiar with the process and hardware needed to fi
 
 Now that you have gotten a taste of AI engineering, you're likely curious about where to go next. 
 
-The next step in your ETX journey is to take the model and serve it from RHOAI as part of a larger application. The following lab will guide you through those steps.
+The next step in your RH One lab journey is to take the model and serve it from RHOAI as part of a larger application. The following lab will guide you through those steps.
 
-Beyond ETX, we recommend that you start playing with both skill and knowledge additions. This is to give something "new" to the model. Give the model a chunk of data, something it doesn’t know about, and then train it on that. 
-
-Also, start thinking about how RHEL AI trained models can help your customers achieve their business goals.
+As a call to action, as you embark on your year, begin to think about how RHEL AI trained models can help your customers achieve their business goals.
 
 As you can see, InstructLab is pretty straightforward. Most of the time you spend will be on curating new model training data. Again, we’re so happy you made it this far, and remember if you have questions we are here to help, and are excited to see what you come up with!
 
-Please visit the official http://www.github.com/instructlab[GitHub project] and check out the community repo to learn about how to get involved with the upstream community! 
-
-Also, learn more about RHEL AI here by reading our https://docs.redhat.com/en/documentation/red_hat_enterprise_linux_ai/[official documentation] and feel free to reach out to the RHEL AI Technical Marketing Team to answer any questions that may come up.
+Learn more about RHEL AI here by reading our https://docs.redhat.com/en/documentation/red_hat_enterprise_linux_ai/[official documentation] and feel free to reach out to the Red Hat AI Technical Marketing Team to answer any questions that may come up.
 
 Now let's go to Red Hat OpenShift AI! 
