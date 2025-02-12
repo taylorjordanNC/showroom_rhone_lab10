@@ -159,9 +159,7 @@ With everything in place and working, it is time to initialize InstructLab. Go t
 ilab config init
 ----
 
-During the configuration, RHEL AI will detect the hardware profile we are using. Confirm it is correct by typing `Y`.
-
-A few things happen during initialization. A taxonomy is generated, a configuration file (`config.yaml`) is created in the `/root/.config/instructlab/` directory, and the appropriate training profile is selected to be used during the fine-tuning process.
+A few things happen during initialization. A taxonomy is generated, a configuration file (`config.yaml`) is created in the `/root/.config/instructlab/` directory, and the appropriate system profile is selected to be used during the fine-tuning process.
 
 Let's take a look at this configuration file. Enter the following command:
 
