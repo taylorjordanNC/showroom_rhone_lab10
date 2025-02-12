@@ -877,7 +877,7 @@ However, we want you to understand, at a high level, what a “full training pro
 
 Our RHEL AI training is a multi-phase training strategy. There are two phases:
 
-* **Phase 1**: We take the starter model (granite-7b-starter), and fine-tune it with the synthetic knowledge dataset produced from SDG. This training process outputs a model ‘checkpoint’ after each epoch of training. The checkpoints are evaluated by Prometheus using standard LLM benchmarks. The best model checkpoint goes to Phase 2.
+* **Phase 1**: We take the starter model, and fine-tune it with the synthetic knowledge dataset produced from SDG. This training process outputs a model ‘checkpoint’ after each epoch of training. The checkpoints are evaluated by Prometheus using standard LLM benchmarks. The best model checkpoint goes to Phase 2.
 
 * **Phase 2**: Our model output from phase 1 is now trained on skills data. This skills data is based on data pre-loaded into the RHEL AI product and is focused on ensuring our final model can process, understand, and answer in the most accurate way from the given context. This process outputs new checkpoints for each epoch that runs. The checkpoints can at this point be evaluated by the customer and the ‘best’ one becomes our final model.
 
